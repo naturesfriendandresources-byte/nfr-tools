@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFR Proposal Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@300;400;700&display=swap');
+  :root {
+    --primary:#3A6B5F; --accent:#E07B54; --light:#F2F8F6;
+    --border:#A8CEBF; --muted:#6B7C76; --text:#2D2D2D;
+    --gold:#D4A054; --danger:#C0392B; --success:#27AE60; --warn:#E67E22;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Lato',sans-serif;font-size:10pt;color:var(--text);background:#f0f4f3;}
+  .app{max-width:1340px;margin:0 auto;padding:20px 18px;}
+
+  /* TOP BAR */
+  .top-bar{display:flex;justify-content:space-between;align-items:center;
+    background:var(--primary);color:#fff;padding:13px 22px;border-radius:8px;margin-bottom:18px;}
+  .brand{font-family:'Playfair Display',serif;font-size:14pt;}
+  .brand span{font-family:'Lato',sans-serif;font-size:7.5pt;letter-spacing:2px;text-transform:uppercase;opacity:.7;display:block;margin-top:2px;}
+  .oh-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    border-radius:20px;padding:6px 18px;font-size:9pt;text-align:right;line-height:1.7;}
+  .oh-pill strong{font-size:12pt;}
+
+  /* LAYOUT */
+  .layout{display:grid;grid-template-columns:310px 1fr;gap:16px;align-items:start;}
+
+  /* PANELS */
+  .panel{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:14px;}
+  .p-title{font-family:'Playfair Display',serif;font-size:10.5pt;color:var(--primary);
+    border-bottom:2px solid var(--border);padding-bottom:7px;margin-bottom:12px;}
+
+  /* FIELDS */
+  .f{margin-bottom:10px;}
+  .f label{display:block;font-size:7.5pt;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+  .f input,.f select{width:100%;border:1px solid var(--border);border-radius:4px;
+    padding:6px 9px;font-family:'Lato',sans-serif;font-size:9.5pt;color:var(--text);outline:none;}
+  .f input:focus,.f select:focus{border-color:var(--primary);}
+  .row2{display:flex;gap:8px;}.row2 .f{flex:1;}
+
+  /* MARKUP GRID */
+  .mu-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .mu-item{display:flex;flex-direction:column;gap:3px;}
+  .mu-item label{font-size:7pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+  .mu-item input{border:1px solid #dde8e3;border-radius:3px;padding:4px 7px;font-size:9pt;text-align:right;outline:none;width:100%;}
+  .mu-item input:focus{border-color:var(--primary);}
+  .mu-note{font-size:7.5pt;color:var(--muted);margin-top:9px;line-height:1.6;font-style:italic;}
+  .toggle-link{font-size:8.5pt;color:var(--primary);cursor:pointer;text-decoration:underline;margin-bottom:8px;display:inline-block;}
+  .collapsible{overflow:hidden;transition:max-height .3s ease;}
+
+  /* LABOR RATE BOX */
+  .rate-box{background:#e8f5f0;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:9pt;}
+  .rate-box strong{color:var(--primary);}
+  .rate-box .rate-row{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;}
+  .rate-box .rate-item{display:flex;flex-direction:column;gap:2px;}
+  .rate-box .rate-item label{font-size:7pt;font-weight:700;color:var(--muted);text-transform:uppercase;}
+  .rate-box .rate-item input{border:1px solid var(--border);border-radius:4px;padding:5px 9px;
+    font-size:10pt;font-weight:700;width:110px;outline:none;text-align:right;}
+  .rate-box .rate-item input:focus{border-color:var(--primary);}
+  .rate-box .rate-tag{background:var(--primary);color:#fff;padding:4px 10px;border-radius:12px;font-size:8pt;font-weight:700;white-space:nowrap;}
+  .rate-box .rate-tag.warn{background:var(--accent);}
+
+  /* LINE ITEMS TABLE */
+  .tbl-wrap{overflow-x:auto;}
+  table.lt{width:100%;border-collapse:collapse;font-size:8.5pt;}
+  table.lt thead th{background:var(--primary);color:#fff;padding:7px 7px;text-align:left;
+    font-size:7.5pt;font-weight:700;letter-spacing:.3px;white-space:nowrap;}
+  table.lt thead th.r{text-align:right;}
+  table.lt thead th.labor-col{background:#2d5448;}
+  table.lt thead th.cost-col{background:#4a7a6e;}
+  table.lt tbody td{border-bottom:1px solid #e5ede9;padding:0;vertical-align:middle;}
+  table.lt tbody tr:nth-child(even) td{background:#fafcfb;}
+  table.lt tbody tr:hover td{background:#f0f8f5;}
+  table.lt td input{width:100%;border:none;background:transparent;
+    padding:6px 7px;font-family:'Lato',sans-serif;font-size:8.5pt;color:var(--text);outline:none;text-align:right;}
+  table.lt td input.desc{text-align:left;}
+  table.lt td input:focus{background:#e8f5f0;}
+  table.lt td.lt-val{text-align:right;padding:6px 8px;font-weight:700;color:var(--primary);white-space:nowrap;font-size:9pt;}
+  table.lt td.lt-num{text-align:right;padding:6px 7px;font-size:8pt;color:var(--muted);}
+  table.lt td.lt-profit{text-align:right;padding:6px 8px;font-size:8.5pt;font-weight:700;}
+  table.lt tfoot td{border-top:2px solid var(--primary);padding:6px 8px;font-size:8pt;font-weight:700;}
+  table.lt tfoot td.r{text-align:right;}
+  .del-btn{background:none;border:none;color:#ccc;cursor:pointer;font-size:13pt;padding:0 5px;line-height:1;}
+  .del-btn:hover{color:var(--danger);}
+  .add-row-btn{background:var(--light);border:1px dashed var(--border);color:var(--primary);
+    padding:7px 16px;border-radius:4px;cursor:pointer;font-size:9pt;font-weight:700;margin-top:8px;width:100%;}
+  .add-row-btn:hover{background:var(--border);}
+
+  /* TOTALS */
+  .totals-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;}
+  .t-tbl{width:100%;font-size:9pt;border-collapse:collapse;}
+  .t-tbl tr td{padding:5px 8px;}
+  .t-tbl tr td:last-child{text-align:right;font-weight:700;}
+  .t-tbl .sub-row td{border-top:1px solid var(--border);padding-top:8px;}
+  .t-tbl .grand-row td{border-top:2px solid var(--primary);font-size:12pt;color:var(--primary);padding-top:9px;}
+  .t-tbl .gp-row td{color:var(--success);font-weight:700;}
+  .t-tbl .muted td{color:var(--muted);font-size:8.5pt;}
+  .t-tbl .mu-row td{color:var(--accent);}
+  .t-tbl .oh-row td{color:var(--muted);font-size:8.5pt;}
+
+  /* BREAK-EVEN */
+  .be-box{background:#fff;border:2px solid var(--primary);border-radius:8px;padding:18px 20px;margin-top:14px;}
+  .be-title{font-family:'Playfair Display',serif;font-size:12pt;color:var(--primary);margin-bottom:13px;}
+  .be-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .be-card{background:var(--light);border:1px solid var(--border);border-radius:6px;padding:11px 12px;text-align:center;}
+  .be-card .lbl{font-size:7pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+  .be-card .val{font-size:17pt;font-weight:700;color:var(--primary);line-height:1;}
+  .be-card .sub{font-size:7.5pt;color:var(--muted);margin-top:3px;}
+  .be-card.green .val{color:var(--success);}
+  .be-card.warn .val{color:var(--warn);}
+  .be-card.red .val{color:var(--danger);}
+  .bar-wrap{margin-top:14px;}
+  .bar-labels{display:flex;justify-content:space-between;font-size:8pt;color:var(--muted);margin-bottom:5px;}
+  .bar{height:12px;background:#e0ece8;border-radius:6px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:6px;transition:width .4s;min-width:2px;}
+  .be-msg{margin-top:11px;background:#f8faf9;border:1px solid var(--border);
+    border-radius:4px;padding:10px 13px;font-size:8.5pt;color:var(--text);line-height:1.7;}
+
+  /* PAYMENT */
+  .pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px;}
+  .pay-card{background:var(--light);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center;}
+  .pay-card .pct{font-size:22pt;font-weight:700;color:var(--primary);line-height:1;}
+  .pay-card .amt{font-size:13pt;font-weight:700;color:var(--accent);margin-top:3px;}
+  .pay-card .lbl{font-size:7.5pt;color:var(--muted);margin-top:4px;line-height:1.5;}
+
+  /* BUTTONS */
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .btn{padding:10px 22px;border-radius:4px;font-family:'Lato',sans-serif;font-size:10pt;font-weight:700;cursor:pointer;border:none;}
+  .btn-p{background:var(--primary);color:#fff;}.btn-p:hover{background:#2d5448;}
+  .btn-o{background:#fff;color:var(--primary);border:2px solid var(--primary);}.btn-o:hover{background:var(--light);}
+  .btn-a{background:var(--accent);color:#fff;}.btn-a:hover{background:#c56840;}
+
+  /* JORGE HELPER NOTE */
+  .jorge-note{background:#fff8e8;border:1px solid var(--gold);border-radius:5px;
+    padding:9px 12px;font-size:8.5pt;color:#7a5800;margin-bottom:12px;line-height:1.6;}
+
+  /* OVERHEAD BUILDER */
+  .oh-builder{border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px;}
+  .oh-line{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid #e8f0ed;}
+  .oh-line:last-child{border-bottom:none;}
+  .oh-line:nth-child(even){background:#fafcfb;}
+  .oh-line label{font-size:8pt;color:var(--text);flex:1;}
+  .oh-line input{width:90px;border:1px solid var(--border);border-radius:3px;padding:3px 7px;
+    font-size:9pt;text-align:right;outline:none;font-family:'Lato',sans-serif;}
+  .oh-line input:focus{border-color:var(--primary);}
+  .oh-total-bar{background:var(--primary);color:#fff;display:flex;justify-content:space-between;
+    align-items:center;padding:8px 10px;border-radius:4px;margin-bottom:10px;font-size:9pt;}
+  .oh-total-bar strong{font-size:11pt;}
+  .oh-result{background:#e8f5f0;border:1px solid var(--border);border-radius:5px;
+    padding:9px 12px;font-size:8.5pt;color:var(--text);line-height:1.8;margin-top:10px;}
+  .oh-result .oh-row-item{display:flex;justify-content:space-between;}
+  .oh-result .oh-row-item span:last-child{font-weight:700;color:var(--primary);}
+  .oh-result .warn-row span{color:var(--danger)!important;}
+  /* JORGE RATE ENGINE */
+  .jorge-engine{background:var(--primary);color:#fff;border-radius:8px;padding:14px 16px;margin-bottom:12px;}
+  .jorge-engine .engine-title{font-size:8pt;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-bottom:10px;}
+  .engine-formula{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .engine-block{display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .engine-block label{font-size:6.5pt;text-transform:uppercase;letter-spacing:.4px;opacity:.7;}
+  .engine-block .eb-val{font-size:13pt;font-weight:700;line-height:1;}
+  .engine-block input{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    color:#fff;border-radius:4px;padding:4px 8px;font-size:12pt;font-weight:700;width:90px;text-align:center;outline:none;}
+  .engine-block input::placeholder{opacity:.5;}
+  .engine-div{font-size:18pt;font-weight:300;opacity:.6;}
+  .engine-result{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+    border-radius:6px;padding:10px 14px;text-align:center;min-width:110px;}
+  .engine-result label{font-size:6.5pt;text-transform:uppercase;letter-spacing:.4px;opacity:.7;display:block;margin-bottom:4px;}
+  .engine-result .er-rate{font-size:20pt;font-weight:700;line-height:1;}
+  .engine-result .er-sub{font-size:7pt;opacity:.7;margin-top:3px;}
+  .engine-status{margin-top:10px;font-size:8pt;background:rgba(255,255,255,.1);
+    border-radius:4px;padding:7px 10px;line-height:1.6;}
+
+  @media print{
+    body{background:#fff;}
+    .app{padding:0;max-width:100%;}
+    .no-print{display:none!important;}
+    .layout{grid-template-columns:1fr;}
+    .be-cards{grid-template-columns:repeat(4,1fr);}
+    table.lt td input{padding:3px 5px;}
+  }
+
+  /* ── PO INBOX ── */
+  .po-inbox-panel{border:2px solid var(--warn);border-radius:8px;background:#fff;
+    padding:16px 18px;margin-bottom:14px;display:none;}
+  .po-inbox-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .po-inbox-title{font-family:'Playfair Display',serif;font-size:10.5pt;color:var(--warn);display:flex;align-items:center;gap:8px;}
+  .po-count-badge{background:var(--warn);color:#fff;border-radius:12px;padding:2px 10px;
+    font-size:8.5pt;font-family:'Lato',sans-serif;font-weight:700;}
+  .po-inbox-row{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:4px;
+    background:var(--light);margin-bottom:6px;cursor:pointer;border:1px solid var(--border);}
+  .po-inbox-row:hover{background:#e0ece8;border-color:var(--primary);}
+  .pi-col{flex:1;min-width:0;}
+  .pi-label{font-size:7pt;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.3px;}
+  .pi-val{font-weight:700;color:var(--primary);font-size:8.5pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .review-btn{background:var(--warn);color:#fff;border:none;border-radius:4px;
+    padding:5px 14px;font-size:8.5pt;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .review-btn:hover{background:#c56b10;}
+
+  /* PO BADGE IN TOP BAR */
+  .po-badge-pill{background:rgba(230,126,34,.25);border:1px solid rgba(230,126,34,.5);
+    border-radius:20px;padding:6px 14px;font-size:8.5pt;cursor:pointer;color:#fff;
+    white-space:nowrap;margin-left:10px;transition:background .2s;}
+  .po-badge-pill:hover{background:rgba(230,126,34,.4);}
+  .po-badge-pill.empty{opacity:.45;}
+
+  /* ── REVIEW MODAL ── */
+  .po-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);
+    z-index:1000;display:none;align-items:flex-start;justify-content:center;
+    overflow-y:auto;padding:20px;}
+  .po-modal.open{display:flex;}
+  .po-modal-inner{background:#fff;border-radius:8px;width:100%;max-width:1100px;
+    padding:24px 28px;position:relative;margin:auto;}
+  .po-modal-close{position:absolute;top:10px;right:14px;background:none;border:none;
+    font-size:18pt;cursor:pointer;color:var(--muted);line-height:1;}
+  .po-modal-close:hover{color:var(--danger);}
+  .po-modal-title{font-family:'Playfair Display',serif;font-size:14pt;color:var(--primary);margin-bottom:16px;padding-right:30px;}
+  .pm-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+  .pm-info-cell{background:var(--light);border:1px solid var(--border);border-radius:4px;padding:9px 12px;}
+  .pm-info-cell label{font-size:7pt;color:var(--muted);text-transform:uppercase;font-weight:700;
+    letter-spacing:.3px;display:block;margin-bottom:3px;}
+  .pm-info-cell .pmv{font-size:10pt;font-weight:700;}
+  .pm-section{font-family:'Playfair Display',serif;font-size:10.5pt;color:var(--primary);
+    border-bottom:1px solid var(--border);padding-bottom:6px;margin:16px 0 10px;}
+  table.pm-scope{width:100%;border-collapse:collapse;font-size:8pt;min-width:800px;}
+  table.pm-scope th{background:var(--primary);color:#fff;padding:6px 5px;text-align:left;
+    font-size:7.5pt;font-weight:700;white-space:nowrap;}
+  table.pm-scope th.r{text-align:right;}
+  table.pm-scope td{border-bottom:1px solid #e5ede9;padding:6px 5px;vertical-align:top;}
+  table.pm-scope tr:nth-child(even) td{background:#fafcfb;}
+  table.pm-scope td.r{text-align:right;}
+  .pm-cost-summary{display:flex;gap:14px;flex-wrap:wrap;background:var(--light);
+    border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:14px;}
+  .pm-cost-item{display:flex;flex-direction:column;gap:2px;min-width:100px;}
+  .pm-cost-item label{font-size:7pt;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.3px;}
+  .pm-cost-item .pmcv{font-size:12pt;font-weight:700;color:var(--primary);}
+  .pm-cost-item .pmcv.grand{font-size:16pt;color:var(--accent);}
+  .pm-notes-area{width:100%;border:1px solid var(--border);border-radius:4px;padding:10px 12px;
+    font-family:'Lato',sans-serif;font-size:9.5pt;outline:none;min-height:70px;resize:vertical;margin-bottom:12px;}
+  .pm-notes-area:focus{border-color:var(--primary);}
+  .pm-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .btn-approve{background:var(--success);color:#fff;border:none;border-radius:4px;
+    padding:11px 26px;font-family:'Lato',sans-serif;font-size:10.5pt;font-weight:700;cursor:pointer;}
+  .btn-approve:hover{background:#1e8449;}
+  .btn-changes{background:#fff;color:var(--danger);border:2px solid var(--danger);border-radius:4px;
+    padding:10px 22px;font-family:'Lato',sans-serif;font-size:10.5pt;font-weight:700;cursor:pointer;}
+  .btn-changes:hover{background:#fdf0ee;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ERROR DISPLAY (hidden unless JS error occurs) -->
+<div id="calc-error" style="display:none;background:#c0392b;color:#fff;padding:10px 18px;border-radius:6px;margin-bottom:10px;font-size:9pt;font-family:monospace;"></div>
+
+<!-- TOP BAR -->
+<div class="top-bar no-print">
+  <div class="brand">Natures Friend &amp; Resources
+    <span>Proposal Calculator — Internal Use Only</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:0;">
+    <div class="oh-pill">
+      Monthly Overhead <strong id="oh-display">$13,555</strong><br>
+      IS Salary Excluded &nbsp;·&nbsp; NFR Must Cover This
+    </div>
+    <button class="po-badge-pill empty no-print" id="po-badge-pill" onclick="scrollToPOInbox()">📋 PO Inbox</button>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- LEFT: Project Info + Settings -->
+<div>
+
+  <div class="panel">
+    <div class="p-title">Project Information</div>
+    <div class="f"><label>Client Name</label><input type="text" id="client-name" placeholder="Full name or company"></div>
+    <div class="f"><label>Property Address</label><input type="text" id="client-addr" placeholder="Street address"></div>
+    <div class="row2">
+      <div class="f"><label>City</label><input type="text" id="client-city" placeholder="Columbus"></div>
+      <div class="f" style="max-width:80px;"><label>Zip</label><input type="text" id="client-zip" placeholder="43228"></div>
+    </div>
+    <div class="row2">
+      <div class="f"><label>Proposal Date</label><input type="date" id="prop-date"></div>
+      <div class="f"><label>Valid Until</label><input type="date" id="prop-valid"></div>
+    </div>
+    <div class="row2">
+      <div class="f"><label>Project Type</label>
+        <select id="proj-type">
+          <option>Kitchen Remodel</option><option>Bathroom Remodel</option>
+          <option>Full Remodel</option><option>Paint / Drywall</option>
+          <option>Cabinets</option><option>Demo</option><option>Other</option>
+        </select>
+      </div>
+      <div class="f"><label>Tax Region</label>
+        <select id="tax-region" onchange="taxRegionChange()">
+          <option value="7.5">Columbus (7.5%)</option>
+          <option value="8.0">Dublin (8.0%)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+    </div>
+    <div class="f" id="custom-tax-wrap" style="display:none;"><label>Custom Tax %</label>
+      <input type="number" id="custom-tax" value="7.5" step="0.1" oninput="calc()">
+    </div>
+    <div class="f"><label>Project Manager</label><input type="text" id="proj-mgr" placeholder="Jose Martinez"></div>
+  </div>
+
+  <!-- JORGE RATE ENGINE -->
+  <div class="panel">
+    <div class="p-title">Jorge's Rate — The Overhead Engine</div>
+    <p style="font-size:8pt;color:var(--muted);margin-bottom:10px;line-height:1.5;">
+      Maria and Scott are overhead — they don't bill clients. <strong>Jorge is the only worker who generates revenue.</strong> His hourly rate must carry the entire monthly overhead across all 3 departments. Set it here once.
+    </p>
+
+    <div class="jorge-engine">
+      <div class="engine-title">Required Rate Formula</div>
+      <div class="engine-formula">
+        <div class="engine-block">
+          <label>Monthly Overhead</label>
+          <div class="eb-val" id="jrf-oh">$13,555</div>
+        </div>
+        <div class="engine-div">÷</div>
+        <div class="engine-block">
+          <label>Jorge's Hrs/Month</label>
+          <input type="number" id="oh-bill-hrs" value="160" min="1" step="8" oninput="calc()">
+        </div>
+        <div class="engine-div">=</div>
+        <div class="engine-result">
+          <label>Required Rate</label>
+          <div class="er-rate" id="jorge-req-rate">$84.72</div>
+          <div class="er-sub">/hr to break even</div>
+        </div>
+      </div>
+      <div class="engine-status" id="engine-status">
+        Set Jorge's charge rate to <strong id="es-rate">$84.72/hr</strong> and every hour he works, one hour of overhead is paid.
+      </div>
+    </div>
+
+    <div class="rate-box">
+      <strong>Charge Rates — Used in Scope Table Below</strong>
+      <div class="rate-row">
+        <div class="rate-item">
+          <label>Jorge — charge $/hr</label>
+          <input type="number" id="default-bill-rate" value="85" min="0" step="1" oninput="calc()">
+        </div>
+        <div class="rate-item">
+          <label>Helper — cost $/hr</label>
+          <input type="number" id="default-cost-rate" value="25" min="0" step="1" oninput="calc()">
+        </div>
+        <div>
+          <div style="font-size:7pt;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.3px;margin-bottom:3px;">Profit/hr</div>
+          <span class="rate-tag" id="bank-rate">$0/hr</span>
+        </div>
+      </div>
+      <div id="rate-status" style="font-size:8pt;margin-top:8px;line-height:1.6;"></div>
+    </div>
+
+    <div class="jorge-note" style="margin-top:10px;margin-bottom:0;">
+      <strong>Helper hours = bonus profit</strong> — overhead is already covered by Jorge's rate. Whatever you make above helper cost ($25/hr) is extra.<br>
+      <strong>Jorge manages 1099 subs?</strong> Still charge his daily rate. The sub cost goes in the Sub $ column with 30% markup — all profit on top.
+    </div>
+  </div>
+
+  <!-- MONTHLY OVERHEAD BUILDER -->
+  <div class="panel">
+    <div class="p-title">Your Monthly Overhead — Actual Costs</div>
+    <p style="font-size:8pt;color:var(--muted);margin-bottom:10px;line-height:1.5;">Enter your real monthly costs. The calculator will figure out what % to add to every job so these bills get paid — without touching your IS salary.</p>
+    <div class="oh-builder">
+      <div class="oh-line"><label>Team Labor (wages + payroll taxes)</label><input type="number" id="oh-labor" value="11520" min="0" step="10" oninput="calc()"></div>
+      <div class="oh-line"><label>Payroll Service</label><input type="number" id="oh-payroll" value="450" min="0" step="10" oninput="calc()"></div>
+      <div class="oh-line"><label>Worker's Comp / Benefits</label><input type="number" id="oh-wc" value="0" min="0" step="10" oninput="calc()"></div>
+      <div class="oh-line"><label>Phones &amp; Tablets</label><input type="number" id="oh-phones" value="110" min="0" step="5" oninput="calc()"></div>
+      <div class="oh-line"><label>Internet</label><input type="number" id="oh-internet" value="75" min="0" step="5" oninput="calc()"></div>
+      <div class="oh-line"><label>Vehicle Fuel (2 trucks)</label><input type="number" id="oh-fuel" value="1000" min="0" step="50" oninput="calc()"></div>
+      <div class="oh-line"><label>General Liability Insurance</label><input type="number" id="oh-insurance" value="0" min="0" step="25" oninput="calc()"></div>
+      <div class="oh-line"><label>Food / Job Site Meals</label><input type="number" id="oh-food" value="400" min="0" step="50" oninput="calc()"></div>
+      <div class="oh-line"><label>Other (tools, misc)</label><input type="number" id="oh-other" value="0" min="0" step="50" oninput="calc()"></div>
+    </div>
+    <div class="oh-total-bar">
+      <span>Total Monthly Overhead</span>
+      <strong id="oh-total-val">$13,555</strong>
+    </div>
+    <p style="font-size:8pt;color:var(--muted);margin-top:6px;line-height:1.5;">
+      This total flows into Jorge's Rate above. Update any line and his required rate recalculates instantly.
+    </p>
+  </div>
+
+  <!-- PROJECT MARKUPS -->
+  <div class="panel">
+    <div class="p-title">Project Markups</div>
+    <p style="font-size:8pt;color:var(--muted);margin-bottom:10px;line-height:1.5;">Applied on top of cost — these cover your risk, scheduling, and project management on top of overhead.</p>
+    <div class="mu-grid">
+      <div class="mu-item"><label>Materials &amp; Tools %</label><input type="number" id="m-mat" value="24" min="0" step="1" oninput="calc()"></div>
+      <div class="mu-item"><label>Sub-contractor %</label><input type="number" id="m-sub" value="30" min="0" step="1" oninput="calc()"></div>
+      <div class="mu-item"><label>Equipment %</label><input type="number" id="m-eq" value="15" min="0" step="1" oninput="calc()"></div>
+      <div class="mu-item"><label>Commission %</label><input type="number" id="m-comm" value="0" min="0" step="1" oninput="calc()"></div>
+    </div>
+    <p class="mu-note">Overhead recovery is calculated automatically from your monthly costs above — no guessing percentages.</p>
+  </div>
+
+</div><!-- end left -->
+
+<!-- RIGHT: Line Items + Results -->
+<div>
+
+  <!-- PO INBOX PANEL -->
+  <div class="po-inbox-panel no-print" id="po-inbox-panel">
+    <div class="po-inbox-header">
+      <div class="po-inbox-title">
+        📋 Purchase Orders Awaiting Review
+        <span class="po-count-badge" id="po-count-badge">0</span>
+      </div>
+      <span style="font-size:8pt;color:var(--muted);">Click a row to review, price, and approve</span>
+    </div>
+    <div id="po-inbox-list"></div>
+  </div>
+
+  <div class="panel">
+    <div class="p-title">Scope of Work — Line Items</div>
+    <div class="tbl-wrap">
+      <table class="lt" id="lt">
+        <thead>
+          <tr>
+            <th style="width:2%;">#</th>
+            <th style="width:18%;">Scope Description</th>
+            <th class="r labor-col" style="width:4%;">Men</th>
+            <th class="r labor-col" style="width:4%;">Est Hrs</th>
+            <th class="r" style="width:4%;background:#5a7f73;" title="Actual hours worked — fill in as job progresses">Act Hrs</th>
+            <th class="r labor-col" style="width:6%;">Charge $/hr</th>
+            <th class="r cost-col"  style="width:6%;">Cost $/hr</th>
+            <th class="r labor-col" style="width:7%;">Labor Rev.</th>
+            <th class="r cost-col"  style="width:6%;">Labor Profit</th>
+            <th class="r" style="width:7%;">Materials $</th>
+            <th class="r" style="width:7%;">Sub $</th>
+            <th class="r" style="width:6%;">Equip $</th>
+            <th class="r" style="width:8%;">Line Total</th>
+            <th style="width:2%;"></th>
+          </tr>
+        </thead>
+        <tbody id="lt-body"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="7" style="color:var(--muted);font-size:7.5pt;padding-left:8px;">TOTALS</td>
+            <td class="r" id="ft-labrev">$0</td>
+            <td class="r" id="ft-labprofit" style="color:var(--success);">$0</td>
+            <td class="r" id="ft-mat">$0</td>
+            <td class="r" id="ft-sub">$0</td>
+            <td class="r" id="ft-eq">$0</td>
+            <td class="r" id="ft-total" style="color:var(--primary);">$0</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <button class="add-row-btn no-print" onclick="addRow()">+ Add Scope Item</button>
+  </div>
+
+  <!-- JOB PROGRESS TRACKER -->
+  <div class="panel" style="border-color:var(--gold);">
+    <div class="p-title" style="border-color:var(--gold);">Job Progress — Actual vs. Estimated Hours</div>
+    <div id="prog-empty" style="font-size:8.5pt;color:var(--muted);font-style:italic;padding:4px 0;">
+      Fill in the <strong>Act Hrs</strong> column above as work progresses. If you finish in fewer hours than estimated on a fixed-price job, the saved labor cost becomes extra profit. If you go over, you can see exactly how much it's eating into your margin.
+    </div>
+    <div id="prog-body" style="display:none;">
+      <div class="be-cards" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px;">
+        <div class="be-card" id="pg-c-var">
+          <div class="lbl">Hours Variance</div><div class="val" id="pg-var">0</div>
+          <div class="sub" id="pg-var-sub">—</div>
+        </div>
+        <div class="be-card" id="pg-c-saved">
+          <div class="lbl" id="pg-saved-lbl">Labor Cost Saved</div><div class="val" id="pg-saved">$0</div>
+          <div class="sub">vs. estimate</div>
+        </div>
+        <div class="be-card">
+          <div class="lbl">Adjusted Gross Margin</div><div class="val" id="pg-adj-margin">0%</div>
+          <div class="sub">after actual hours</div>
+        </div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-labels"><span>Hours Burned</span><span id="pg-bar-lbl">0 of 0 hrs</span></div>
+        <div class="bar"><div class="bar-fill" id="pg-bar-fill" style="width:0%;background:var(--success);"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;">
+        <table class="t-tbl">
+          <tr><td colspan="2" style="font-size:7.5pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:5px;">Hour Count</td></tr>
+          <tr class="muted"><td>Estimated Man-Hours</td><td id="pg-est">0</td></tr>
+          <tr class="muted"><td>Actual Man-Hours</td><td id="pg-act">0</td></tr>
+        </table>
+        <table class="t-tbl">
+          <tr><td colspan="2" style="font-size:7.5pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:5px;">P&amp;L Impact (Fixed Price)</td></tr>
+          <tr class="muted"><td>Est. Labor Cost</td><td id="pg-est-cost">$0.00</td></tr>
+          <tr class="muted"><td>Actual Labor Cost</td><td id="pg-act-cost">$0.00</td></tr>
+          <tr><td>Estimated GP</td><td id="pg-est-gp">$0.00</td></tr>
+          <tr><td><strong>Adjusted GP</strong></td><td id="pg-adj-gp" style="font-weight:700;">$0.00</td></tr>
+        </table>
+      </div>
+      <div class="be-msg" id="pg-msg" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- TOTALS BREAKDOWN -->
+  <div class="panel">
+    <div class="p-title">Cost Breakdown &amp; Pricing</div>
+    <div class="totals-split">
+      <table class="t-tbl">
+        <tr><td colspan="2" style="font-size:7.5pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:5px;">What You're Billing</td></tr>
+        <tr><td>Labor Revenue</td><td id="t-labrev">$0.00</td></tr>
+        <tr><td>Materials (cost + <span id="lb-mat">10</span>%)</td><td id="t-mat-billed">$0.00</td></tr>
+        <tr><td>Sub-contractors (cost + <span id="lb-sub">30</span>%)</td><td id="t-sub-billed">$0.00</td></tr>
+        <tr><td>Equipment (cost + <span id="lb-eq">15</span>%)</td><td id="t-eq-billed">$0.00</td></tr>
+        <tr class="sub-row"><td style="font-weight:700;">Subtotal</td><td id="t-subtotal">$0.00</td></tr>
+        <tr style="height:6px;"><td colspan="2"></td></tr>
+        <tr><td colspan="2" style="font-size:7.5pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:5px;">Added to Client Price</td></tr>
+        <tr class="oh-row"><td style="font-size:7.5pt;color:var(--muted);">Overhead baked into Jorge's rate — no separate load</td><td style="font-size:7.5pt;color:var(--muted);">—</td></tr>
+        <tr class="oh-row"><td>Commission (<span id="lb-comm">0</span>%)</td><td id="t-comm">$0.00</td></tr>
+        <tr class="oh-row" style="border-top:1px dashed var(--border);"><td><strong>Sales Tax on Materials (<span id="lb-taxrate">7.5</span>%)</strong></td><td id="t-tax" style="font-weight:700;">$0.00</td></tr>
+      </table>
+      <table class="t-tbl">
+        <tr><td colspan="2" style="font-size:7.5pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:5px;">What It Cost You</td></tr>
+        <tr class="muted"><td>Labor Cost (workers paid)</td><td id="t-labcost">$0.00</td></tr>
+        <tr class="muted"><td>Materials (at cost)</td><td id="t-matcost">$0.00</td></tr>
+        <tr class="muted"><td>Sub-contractors (at cost)</td><td id="t-subcost">$0.00</td></tr>
+        <tr class="muted"><td>Equipment (at cost)</td><td id="t-eqcost">$0.00</td></tr>
+        <tr class="sub-row muted"><td>Total Direct Cost</td><td id="t-directcost">$0.00</td></tr>
+        <tr style="height:6px;"><td colspan="2"></td></tr>
+        <tr><td colspan="2" style="font-size:7.5pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:5px;">Your Result</td></tr>
+        <tr class="grand-row"><td>Grand Total (client pays)</td><td id="t-grand">$0.00</td></tr>
+        <tr class="gp-row"><td>Gross Profit</td><td id="t-gp">$0.00</td></tr>
+        <tr class="muted"><td>Gross Margin</td><td id="t-margin">0.0%</td></tr>
+        <tr style="height:6px;"><td colspan="2"></td></tr>
+        <tr><td colspan="2" style="font-size:7.5pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:5px;">Labor Breakdown</td></tr>
+        <tr class="muted"><td>Total Man-Hours</td><td id="t-manhours">0</td></tr>
+        <tr class="muted"><td>Avg Charge Rate</td><td id="t-avgcharge">—</td></tr>
+        <tr style="color:var(--success);font-weight:700;"><td>Labor Profit</td><td id="t-labprofit">$0.00</td></tr>
+        <tr style="color:var(--success);font-weight:700;"><td>Profit Per Man-Hour</td><td id="t-pph">$0.00</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- BREAK-EVEN -->
+  <div class="be-box">
+    <div class="be-title">Break-Even Check — Without IS Salary</div>
+    <div class="be-cards">
+      <div class="be-card" id="c-gp"><div class="lbl">Gross Profit</div><div class="val" id="be-gp">$0</div><div class="sub">this job</div></div>
+      <div class="be-card" id="c-mg"><div class="lbl">Gross Margin</div><div class="val" id="be-mg">0%</div><div class="sub">of total price</div></div>
+      <div class="be-card" id="c-dy"><div class="lbl">Days Covered</div><div class="val" id="be-dy">0</div><div class="sub">of NFR overhead</div></div>
+      <div class="be-card" id="c-mo"><div class="lbl">Months Covered</div><div class="val" id="be-mo">0.0</div><div class="sub">fully covered</div></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-labels"><span>Overhead Coverage</span><span id="bar-lbl">$0 of $15,600/mo</span></div>
+      <div class="bar"><div class="bar-fill" id="bar-fill" style="width:0%;background:var(--danger);"></div></div>
+    </div>
+    <div class="be-msg" id="be-msg">Enter your scope items above to see if this job covers NFR's monthly overhead without touching your IS income.</div>
+  </div>
+
+  <!-- PAYMENT SCHEDULE -->
+  <div class="panel" style="margin-top:14px;">
+    <div class="p-title">Payment Schedule</div>
+    <div class="pay-grid">
+      <div class="pay-card"><div class="pct">40%</div><div class="amt" id="pay-1">$0.00</div><div class="lbl">Deposit · Upon signing<br>Reserves start date</div></div>
+      <div class="pay-card"><div class="pct">40%</div><div class="amt" id="pay-2">$0.00</div><div class="lbl">Progress · Materials ordered<br>Work underway</div></div>
+      <div class="pay-card"><div class="pct">20%</div><div class="amt" id="pay-3">$0.00</div><div class="lbl">Final · Project complete<br>Walkthrough done</div></div>
+    </div>
+    <p style="font-size:7.5pt;color:var(--muted);margin-top:9px;">⚠️ Work will not begin until deposit is received. &nbsp;·&nbsp; Work pauses if progress payment is late. &nbsp;·&nbsp; Accepted: Check · Zelle · ACH Transfer</p>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions no-print">
+    <button class="btn btn-p" onclick="window.print()">Print / Save as PDF</button>
+    <button class="btn btn-o" onclick="resetAll()">New Job</button>
+    <button class="btn btn-a" onclick="copyTotal()">Copy Grand Total</button>
+  </div>
+
+</div><!-- end right -->
+</div><!-- end layout -->
+</div><!-- end app -->
+
+<!-- PO REVIEW MODAL -->
+<div class="po-modal no-print" id="po-review-modal">
+  <div class="po-modal-inner">
+    <button class="po-modal-close" onclick="closePOReview()" title="Close">×</button>
+    <div id="pm-content"></div>
+  </div>
+</div>
+
+<script>
+let rows = [], rc = 0;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const t = new Date(), v = new Date(t);
+  v.setDate(v.getDate() + 30);
+  document.getElementById('prop-date').value = ds(t);
+  document.getElementById('prop-valid').value = ds(v);
+  addRow(); addRow(); addRow(); addRow();
+  calc();
+});
+
+function ds(d){ return d.toISOString().split('T')[0]; }
+
+function addRow(){
+  const id = ++rc; rows.push(id);
+  const br = parseFloat(document.getElementById('default-bill-rate').value) || 85;
+  const cr = 0; // Jorge's labor cost = $0 (wages are in monthly overhead)
+  const tr = document.createElement('tr');
+  tr.id = 'r'+id;
+  tr.innerHTML = `
+    <td class="lt-num">${rows.length}</td>
+    <td><input class="desc" type="text" placeholder="Scope description..." oninput="calc()"></td>
+    <td><input type="number" min="1" step="1" value="1" id="men${id}" oninput="rowLabor(${id})"></td>
+    <td><input type="number" min="0" step=".5" placeholder="—" id="hrs${id}" oninput="rowLabor(${id})"></td>
+    <td><input type="number" min="0" step=".5" placeholder="—" id="act${id}" oninput="calc()" style="background:#edf6f2;" title="Actual hours per man worked"></td>
+    <td><input type="number" min="0" step="1" value="${br}" id="br${id}" oninput="rowLabor(${id})"></td>
+    <td><input type="number" min="0" step="1" value="${cr}" id="cr${id}" oninput="rowLabor(${id})"></td>
+    <td class="lt-val" id="lrev${id}">—</td>
+    <td class="lt-profit" id="lprof${id}">—</td>
+    <td><input type="number" min="0" step=".01" placeholder="0.00" id="mat${id}" oninput="calc()"></td>
+    <td><input type="number" min="0" step=".01" placeholder="0.00" id="sub${id}" oninput="calc()"></td>
+    <td><input type="number" min="0" step=".01" placeholder="0.00" id="eq${id}" oninput="calc()"></td>
+    <td class="lt-val" id="ltot${id}">$0.00</td>
+    <td><button class="del-btn no-print" onclick="delRow(${id})">×</button></td>`;
+  document.getElementById('lt-body').appendChild(tr);
+  renum();
+}
+
+function delRow(id){
+  const el=document.getElementById('r'+id); if(el) el.remove();
+  rows=rows.filter(r=>r!==id); renum(); calc();
+}
+
+function renum(){
+  document.querySelectorAll('#lt-body tr').forEach((tr,i)=>{
+    const c=tr.querySelector('.lt-num'); if(c) c.textContent=i+1;
+  });
+}
+
+function rowLabor(id){
+  const men=parseFloat(document.getElementById('men'+id)?.value)||0;
+  const hrs=parseFloat(document.getElementById('hrs'+id)?.value)||0;
+  const br=parseFloat(document.getElementById('br'+id)?.value)||0;
+  const cr=parseFloat(document.getElementById('cr'+id)?.value)||0;
+  const lrev=men*hrs*br, lcost=men*hrs*cr, lprof=lrev-lcost;
+  const lrevEl=document.getElementById('lrev'+id);
+  const lprofEl=document.getElementById('lprof'+id);
+  if(lrevEl) lrevEl.textContent = (men||hrs||br) ? fmt(lrev) : '—';
+  if(lprofEl){
+    lprofEl.textContent = (men||hrs||br) ? fmt(lprof) : '—';
+    lprofEl.style.color = lprof>0?'var(--success)':lprof<0?'var(--danger)':'var(--muted)';
+  }
+  calc();
+}
+
+function calc(){
+  try { _calc(); } catch(e) {
+    var dbg=document.getElementById('calc-error');
+    if(dbg){ dbg.style.display='block'; dbg.textContent='Calc error: '+e.message+' ('+e.stack.split('\n')[1]+')';}
+    console.error('calc() error:', e);
+  }
+}
+function _calc(){
+  // ── 1. CALCULATIONS FIRST — must run before any display code ─────────
+  const overhead = getOverhead();
+  const billHrs  = pf('oh-bill-hrs') || 160;
+  console.log('[NFR calc] overhead='+overhead+' billHrs='+billHrs+' rows='+JSON.stringify(rows));
+  const reqRate  = (overhead > 0 && billHrs > 0) ? (overhead / billHrs) : 0;
+
+  const defBR = pf('default-bill-rate') || 85;
+  const defCR = pf('default-cost-rate') || 25;
+
+  const mu = {
+    mat:  pf('m-mat')  || 0,
+    sub:  pf('m-sub')  || 0,
+    eq:   pf('m-eq')   || 0,
+    comm: pf('m-comm') || 0
+  };
+  const taxRate = getTax() || 0;
+
+  let totLabRev=0, totLabCost=0, totLabProf=0;
+  let totMatCost=0, totSubCost=0, totEqCost=0;
+  let totManHours=0, totLineTotal=0;
+  let totActManHours=0, totActLabCost=0, hasActual=false;
+
+  rows.forEach(function(id){
+    const men = pf('men'+id)||0;
+    const hrs = pf('hrs'+id)||0;
+    const actHrs = pf('act'+id)||0;
+    const br  = pf('br'+id)||0;
+    const cr  = pf('cr'+id)||0;
+    const mat = pf('mat'+id)||0;
+    const sub = pf('sub'+id)||0;
+    const eq  = pf('eq'+id)||0;
+
+    if(actHrs>0){ hasActual=true; totActManHours+=men*actHrs; totActLabCost+=men*actHrs*cr; }
+
+    const labRev   = men*hrs*br;
+    const labCost  = men*hrs*cr;
+    const labProf  = labRev - labCost;
+    const matBilledRow = mat*(1 + mu.mat/100);
+    const subBilledRow = sub*(1 + mu.sub/100);
+    const eqBilledRow  = eq *(1 + mu.eq /100);
+    // Tax is a summary item only — not included in per-row Line Total
+    const rowSubtotal  = labRev + matBilledRow + subBilledRow + eqBilledRow;
+    const lineTotal    = rowSubtotal*(1 + mu.comm/100);
+
+    totLabRev  += labRev;  totLabCost += labCost; totLabProf += labProf;
+    totMatCost += mat;     totSubCost += sub;      totEqCost  += eq;
+    totManHours += men*hrs; totLineTotal += lineTotal;
+
+    console.log('[NFR row'+id+'] men='+men+' hrs='+hrs+' br='+br+' mat='+mat+' labRev='+labRev+' lineTotal='+lineTotal.toFixed(2));
+    // Update this row's display
+    set('lrev'+id, (men||hrs||br) ? fmt(labRev) : '—');
+    var lpEl = document.getElementById('lprof'+id);
+    if(lpEl){
+      lpEl.textContent = (men||hrs||br) ? fmt(labProf) : '—';
+      lpEl.style.color = labProf>0 ? 'var(--success)' : labProf<0 ? 'var(--danger)' : 'var(--muted)';
+    }
+    set('ltot'+id, fmt(lineTotal));
+  });
+
+  // Full job totals — tax always separate, never inside subtotal
+  const matBilled  = totMatCost*(1 + mu.mat/100);
+  const subBilled  = totSubCost*(1 + mu.sub/100);
+  const eqBilled   = totEqCost *(1 + mu.eq /100);
+  const subtotal   = totLabRev + matBilled + subBilled + eqBilled;   // NO tax here
+  const commAmt    = subtotal*(mu.comm/100);
+  const taxLoad    = totMatCost*(taxRate/100);                        // tax always last
+  const grand      = subtotal + commAmt + taxLoad;
+  const directCost = totLabCost + totMatCost + totSubCost + totEqCost;
+  const gp         = grand - directCost;
+  const margin     = grand>0 ? (gp/grand*100) : 0;
+  const jorgeOHCovered = totManHours * reqRate;
+  const overheadPct    = overhead>0 ? Math.min((jorgeOHCovered/overhead)*100, 999) : 0;
+
+  // ── 2. UPDATE ALL DISPLAYS ────────────────────────────────────────────
+
+  // Footer row
+  set('ft-labrev', fmt(totLabRev));    set('ft-labprofit', fmt(totLabProf));
+  set('ft-mat', fmt(totMatCost));      set('ft-sub', fmt(totSubCost));
+  set('ft-eq', fmt(totEqCost));        set('ft-total', fmt(totLineTotal));
+
+  // Totals panel
+  set('t-labrev', fmt(totLabRev));
+  set('t-mat-billed', fmt(matBilled)); set('t-sub-billed', fmt(subBilled));
+  set('t-eq-billed', fmt(eqBilled));   set('t-subtotal', fmt(subtotal));
+  set('t-comm', fmt(commAmt));         set('t-tax', fmt(taxLoad));
+  set('lb-taxrate', taxRate);
+  set('t-labcost', fmt(totLabCost));   set('t-matcost', fmt(totMatCost));
+  set('t-subcost', fmt(totSubCost));   set('t-eqcost', fmt(totEqCost));
+  set('t-directcost', fmt(directCost));
+  set('t-grand', fmt(grand));          set('t-gp', fmt(gp));
+  set('t-margin', margin.toFixed(1)+'%');
+  set('t-manhours', Math.round(totManHours)+' hrs');
+  set('t-avgcharge', totManHours>0 ? ('$'+(totLabRev/totManHours).toFixed(2)+'/hr') : '—');
+  set('t-labprofit', fmt(totLabProf));
+  set('t-pph', totManHours>0 ? ('$'+(totLabProf/totManHours).toFixed(2)+'/hr') : '$0.00');
+  set('lb-mat', mu.mat); set('lb-sub', mu.sub); set('lb-eq', mu.eq); set('lb-comm', mu.comm);
+
+  // Payment schedule
+  set('pay-1', fmt(grand*.4)); set('pay-2', fmt(grand*.4)); set('pay-3', fmt(grand*.2));
+
+  // Jorge rate engine display
+  var ohDisplay = '$' + Math.round(overhead).toLocaleString('en-US');
+  set('jrf-oh', ohDisplay);
+  set('oh-display', ohDisplay);
+  set('jorge-req-rate', '$' + reqRate.toFixed(2));
+
+  var profitPerHr = defBR - reqRate;
+  var bankEl = document.getElementById('bank-rate');
+  if(bankEl){
+    bankEl.textContent = (profitPerHr>=0?'+':'') + '$' + profitPerHr.toFixed(2) + '/hr';
+    bankEl.className = 'rate-tag' + (profitPerHr<0?' warn':'');
+  }
+  var statusEl = document.getElementById('rate-status');
+  if(statusEl){
+    if(defBR < reqRate){
+      statusEl.textContent = 'Rate too low — raise Jorge to at least $' + Math.ceil(reqRate) + '/hr to cover overhead.';
+      statusEl.style.color = 'var(--danger)';
+      statusEl.style.fontWeight = '700';
+    } else {
+      statusEl.textContent = 'At $' + defBR + '/hr, every Jorge hour banks $' + profitPerHr.toFixed(2) + ' above overhead.';
+      statusEl.style.color = 'var(--success)';
+      statusEl.style.fontWeight = 'normal';
+    }
+  }
+  var engineEl = document.getElementById('engine-status');
+  if(engineEl){
+    var hrsNeeded = overhead>0 ? Math.ceil(overhead/defBR) : 0;
+    engineEl.textContent = 'Jorge needs ' + hrsNeeded + ' hrs/month at $' + defBR + '/hr (' + Math.ceil(hrsNeeded/8) + ' days) to cover all overhead.';
+  }
+  var esRate = document.getElementById('es-rate');
+  if(esRate) esRate.textContent = '$' + reqRate.toFixed(2) + '/hr';
+
+  // Break-even & progress
+  breakeven(gp, margin, overhead, grand, totManHours, reqRate, jorgeOHCovered, overheadPct);
+  updateProgress(totManHours, totActManHours, hasActual, totLabCost, totActLabCost, gp, grand);
+} // end _calc
+
+function breakeven(gp, margin, overhead, grand, manHours, reqRate, jorgeOHCovered, ohPct){
+  const days=overhead>0?(jorgeOHCovered/overhead)*30:0;
+  const months=overhead>0?jorgeOHCovered/overhead:0;
+  const barPct=Math.min(Math.max(ohPct,0),100);
+  const gpDays=overhead>0?(gp/overhead)*30:0;
+  const gpMonths=overhead>0?gp/overhead:0;
+
+  set('be-gp', fmtS(gp)); set('be-mg', margin.toFixed(1)+'%');
+  set('be-dy', Math.round(days)); set('be-mo', months.toFixed(1));
+  set('bar-lbl', fmt(jorgeOHCovered)+' of $'+overhead.toLocaleString()+'/mo (from Jorge hrs)');
+
+  const fill=document.getElementById('bar-fill');
+  if(fill){ fill.style.width=barPct+'%'; fill.style.background=barPct>=100?'var(--success)':barPct>=50?'var(--warn)':'var(--danger)'; }
+
+  color('c-gp', gp>=overhead?'green':gp>0?'warn':'red');
+  color('c-mg', margin>=30?'green':margin>=20?'warn':'red');
+  color('c-dy', days>=30?'green':days>=15?'warn':'red');
+  color('c-mo', months>=1?'green':months>=0.5?'warn':'red');
+
+  let msg='';
+  if(grand===0){
+    msg='Add scope items above. Every hour Jorge bills at his required rate covers that slice of monthly overhead — materials and sub markups on top are straight profit.';
+  } else {
+    const ohLine = manHours>0
+      ? `Jorge's ${Math.round(manHours)} hrs × $${reqRate.toFixed(2)}/hr required rate covers ${fmt(jorgeOHCovered)} (${Math.round(days)} days of the $${overhead.toLocaleString()}/mo overhead).`
+      : `No labor hours entered — overhead coverage comes from markups only.`;
+    const profitLine = gp > 0
+      ? ` Total gross profit: ${fmt(gp)} — materials + sub markups + labor spread above the required rate.`
+      : ` Gross profit is negative — check your rates.`;
+    const needLine = gp < overhead
+      ? ` Need ${fmt(overhead - jorgeOHCovered)} more in Jorge hours this month to fully cover overhead without IS salary.`
+      : ` This job alone covers all overhead for the month.`;
+    msg = ohLine + profitLine + (jorgeOHCovered < overhead ? needLine : '');
+  }
+  set('be-msg', msg);
+}
+
+function updateProgress(estHrs, actHrs, hasAct, estCost, actCost, gp, grand){
+  const empty=document.getElementById('prog-empty');
+  const body=document.getElementById('prog-body');
+  if(!hasAct){
+    if(empty) empty.style.display='block';
+    if(body) body.style.display='none';
+    return;
+  }
+  if(empty) empty.style.display='none';
+  if(body) body.style.display='block';
+
+  const varHrs=estHrs-actHrs;
+  const costSaved=estCost-actCost;       // positive = under budget (saved money)
+  const adjGP=gp+costSaved;             // fixed-price job: less cost = more profit
+  const adjMargin=grand>0?(adjGP/grand*100):0;
+  const pctDone=estHrs>0?Math.min((actHrs/estHrs)*100,150):0;
+
+  set('pg-est', Math.round(estHrs)+' hrs');
+  set('pg-act', Math.round(actHrs)+' hrs');
+  const varSign=varHrs>=0?'+':'';
+  set('pg-var', varSign+Math.round(varHrs)+' hrs');
+  set('pg-var-sub', varHrs>0?'under estimate ✅':varHrs<0?'over estimate ⚠️':'exactly on track');
+
+  set('pg-est-cost', fmt(estCost));
+  set('pg-act-cost', fmt(actCost));
+  const savedEl=document.getElementById('pg-saved');
+  if(savedEl){
+    savedEl.textContent=fmt(Math.abs(costSaved));
+    savedEl.style.color=costSaved>=0?'var(--success)':'var(--danger)';
+    const lbl=document.getElementById('pg-saved-lbl');
+    if(lbl) lbl.textContent=costSaved>=0?'Labor Cost Saved':'Extra Labor Cost';
+  }
+
+  set('pg-est-gp', fmt(gp));
+  const adjEl=document.getElementById('pg-adj-gp');
+  if(adjEl){adjEl.textContent=fmt(adjGP); adjEl.style.color=adjGP>0?'var(--success)':'var(--danger)';}
+  set('pg-adj-margin', adjMargin.toFixed(1)+'%');
+
+  // Progress bar
+  const pbar=document.getElementById('pg-bar-fill');
+  if(pbar){
+    pbar.style.width=Math.min(pctDone,100)+'%';
+    pbar.style.background=pctDone<=80?'var(--success)':pctDone<=100?'var(--warn)':'var(--danger)';
+  }
+  set('pg-bar-lbl', Math.round(actHrs)+' of '+Math.round(estHrs)+' est. hrs ('+Math.round(pctDone)+'%)');
+
+  // Color cards
+  color('pg-c-var', varHrs>=0?'green':'red');
+  color('pg-c-saved', costSaved>=0?'green':'red');
+
+  let msg='';
+  if(varHrs>0){
+    msg=`✅ ${Math.round(varHrs)} hrs under estimate — labor cost came in ${fmt(costSaved)} less than budgeted. Fixed-price means that savings go straight to your pocket. Adjusted gross profit: ${fmt(adjGP)} (${adjMargin.toFixed(1)}%).`;
+  } else if(varHrs<0){
+    msg=`⚠️ ${Math.round(Math.abs(varHrs))} hrs over estimate — extra labor cost: ${fmt(Math.abs(costSaved))}. This eats into your $10/hr contingency buffer. If you're still over, review scope before finishing.`;
+  } else {
+    msg=`✅ Hours exactly on track. Gross profit holding at ${fmt(adjGP)} (${adjMargin.toFixed(1)}%).`;
+  }
+  set('pg-msg', msg);
+}
+
+function getOverhead(){
+  const ids=['oh-labor','oh-payroll','oh-wc','oh-phones','oh-internet','oh-fuel','oh-insurance','oh-food','oh-other'];
+  const total=ids.reduce((s,id)=>s+(pf(id)||0),0);
+  const el=document.getElementById('oh-total-val');
+  if(el) el.textContent='$'+total.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
+  return total;
+}
+
+// Helpers
+function pf(id){ return parseFloat(document.getElementById(id)?.value)||0; }
+function set(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
+function color(id,cls){ const e=document.getElementById(id); if(e) e.className='be-card '+cls; }
+function fmt(n){ return '$'+(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtS(n){ return n>=1000?'$'+(n/1000).toFixed(1)+'k':'$'+Math.round(n||0); }
+function getTax(){
+  const r=document.getElementById('tax-region').value;
+  return r==='custom'?pf('custom-tax'):parseFloat(r)||0;
+}
+function taxRegionChange(){
+  document.getElementById('custom-tax-wrap').style.display=
+    document.getElementById('tax-region').value==='custom'?'block':'none';
+  calc();
+}
+function resetAll(){
+  if(!confirm('Clear and start a new job?')) return;
+  ['client-name','client-addr','client-city','client-zip','proj-mgr'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('lt-body').innerHTML=''; rows=[]; rc=0;
+  const t=new Date(),v=new Date(t); v.setDate(v.getDate()+30);
+  document.getElementById('prop-date').value=ds(t);
+  document.getElementById('prop-valid').value=ds(v);
+  addRow(); addRow(); addRow(); addRow(); calc();
+}
+function copyTotal(){
+  const v=document.getElementById('t-grand').textContent;
+  navigator.clipboard.writeText(v).then(()=>alert('Copied: '+v));
+}
+
+// ── PO INBOX SYSTEM ───────────────────────────────────────────────────────────
+function loadPOs(){ try{ return JSON.parse(localStorage.getItem('nfr_pos')||'[]'); }catch(e){ return []; } }
+function savePOs(pos){ localStorage.setItem('nfr_pos', JSON.stringify(pos)); }
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function refreshPOInbox(){
+  const pending = loadPOs().filter(p => p.status === 'pending_review');
+  const panel   = document.getElementById('po-inbox-panel');
+  const badge   = document.getElementById('po-badge-pill');
+  const countEl = document.getElementById('po-count-badge');
+
+  if(badge){
+    if(pending.length > 0){
+      badge.textContent = '📋 ' + pending.length + ' pending PO' + (pending.length>1?'s':'');
+      badge.className = 'po-badge-pill no-print';
+    } else {
+      badge.textContent = '📋 PO Inbox';
+      badge.className = 'po-badge-pill empty no-print';
+    }
+  }
+  if(countEl) countEl.textContent = pending.length;
+  if(!panel) return;
+
+  if(pending.length === 0){ panel.style.display='none'; return; }
+  panel.style.display = 'block';
+
+  const list = document.getElementById('po-inbox-list');
+  if(!list) return;
+  list.innerHTML = '';
+  pending.forEach(po => {
+    const dt = new Date(po.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const row = document.createElement('div');
+    row.className = 'po-inbox-row';
+    row.innerHTML = `
+      <div class="pi-col"><div class="pi-label">PO #</div><div class="pi-val">${escH(po.id)}</div></div>
+      <div class="pi-col"><div class="pi-label">Client</div><div class="pi-val">${escH(po.project.client_name||'—')}</div></div>
+      <div class="pi-col"><div class="pi-label">Type</div><div class="pi-val">${escH(po.project.project_type||'—')}</div></div>
+      <div class="pi-col"><div class="pi-label">Created by</div><div class="pi-val">${escH(po.created_by||'—')}</div></div>
+      <div class="pi-col"><div class="pi-label">Date</div><div class="pi-val">${dt}</div></div>
+      <button class="review-btn" onclick="openPOReview('${escH(po.id)}')">Review →</button>`;
+    list.appendChild(row);
+  });
+}
+
+function scrollToPOInbox(){
+  const panel = document.getElementById('po-inbox-panel');
+  if(panel && panel.style.display !== 'none') panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function openPOReview(poId){
+  const po = loadPOs().find(p => p.id === poId);
+  if(!po) return;
+
+  const modal = document.getElementById('po-review-modal');
+  modal.dataset.poId = poId;
+
+  // Use current calculator rates
+  const laborRate = pf('default-bill-rate') || 85;
+  const matMu     = pf('m-mat') || 24;
+  const subMu     = pf('m-sub') || 30;
+  const eqMu      = pf('m-eq')  || 15;
+  const taxRate   = getTax() || 7.5;
+
+  let totMat=0, totSub=0, totTools=0, totManHrs=0;
+  (po.scope_items||[]).forEach(item => {
+    totMat    += item.mat_cost   || 0;
+    totSub    += item.sub_cost   || 0;
+    totTools  += item.tools_cost || 0;
+    totManHrs += (item.men||1) * (item.est_hrs||0);
+  });
+
+  const laborRev    = totManHrs * laborRate;
+  const matBilled   = totMat   * (1 + matMu/100);
+  const subBilled   = totSub   * (1 + subMu/100);
+  const toolsBilled = totTools * (1 + eqMu/100);
+  const taxAmt      = totMat   * (taxRate/100);
+  const grand       = laborRev + matBilled + subBilled + toolsBilled + taxAmt;
+  const fmtD = n => '$'+(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtN = n => (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const startDate = po.project.start_date
+    ? new Date(po.project.start_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+    : '—';
+
+  const scopeRows = (po.scope_items||[]).map((item,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${escH(item.category)}</strong></td>
+      <td>${escH(item.description)}</td>
+      <td>${escH(item.spec)}</td>
+      <td>${escH(item.dimensions)}</td>
+      <td class="r">${item.men||1}</td>
+      <td class="r">${item.est_hrs||0}</td>
+      <td class="r">$${fmtN(item.mat_cost)}</td>
+      <td class="r">$${fmtN(item.sub_cost)}</td>
+      <td class="r">$${fmtN(item.tools_cost)}</td>
+      <td>${escH(item.notes)}</td>
+    </tr>`).join('');
+
+  document.getElementById('pm-content').innerHTML = `
+    <div class="po-modal-title">📋 Reviewing: ${escH(po.id)} — ${escH(po.project.client_name||'No Client')}</div>
+    <div class="pm-info-grid">
+      <div class="pm-info-cell"><label>Client</label><div class="pmv">${escH(po.project.client_name||'—')}</div></div>
+      <div class="pm-info-cell"><label>Address</label><div class="pmv">${escH([po.project.client_addr,po.project.client_city].filter(Boolean).join(', ')||'—')}</div></div>
+      <div class="pm-info-cell"><label>Project Type</label><div class="pmv">${escH(po.project.project_type||'—')}</div></div>
+      <div class="pm-info-cell"><label>Est. Start Date</label><div class="pmv">${startDate}</div></div>
+      <div class="pm-info-cell"><label>Created By</label><div class="pmv">${escH(po.created_by||'—')}</div></div>
+      <div class="pm-info-cell"><label>Tax Region</label><div class="pmv">${escH(po.project.tax_region)}%</div></div>
+    </div>
+
+    <div class="pm-section">Scope of Work &nbsp;·&nbsp; ${(po.scope_items||[]).length} items &nbsp;·&nbsp; ${totManHrs.toFixed(1)} man-hours</div>
+    <div style="overflow-x:auto;margin-bottom:12px;">
+      <table class="pm-scope">
+        <thead><tr>
+          <th style="width:22px;">#</th>
+          <th style="width:80px;">Category</th>
+          <th style="min-width:130px;">Description</th>
+          <th style="min-width:110px;">Spec / Grade</th>
+          <th style="min-width:100px;">Dimensions / Qty</th>
+          <th class="r" style="width:40px;">Men</th>
+          <th class="r" style="width:44px;">Hrs</th>
+          <th class="r" style="width:68px;">Mat $</th>
+          <th class="r" style="width:68px;">Sub $</th>
+          <th class="r" style="width:68px;">Tools $</th>
+          <th style="min-width:90px;">Notes</th>
+        </tr></thead>
+        <tbody>${scopeRows}</tbody>
+      </table>
+    </div>
+
+    <div class="pm-section">Estimated Pricing &nbsp;·&nbsp; Using your rates: $${laborRate}/hr · ${matMu}% mat · ${subMu}% sub · ${eqMu}% equip · ${taxRate}% tax</div>
+    <div class="pm-cost-summary">
+      <div class="pm-cost-item"><label>Man-Hours</label><div class="pmcv">${totManHrs.toFixed(1)} hrs</div></div>
+      <div class="pm-cost-item"><label>Labor Revenue</label><div class="pmcv">${fmtD(laborRev)}</div></div>
+      <div class="pm-cost-item"><label>Materials (billed)</label><div class="pmcv">${fmtD(matBilled)}</div></div>
+      <div class="pm-cost-item"><label>Sub (billed)</label><div class="pmcv">${fmtD(subBilled)}</div></div>
+      <div class="pm-cost-item"><label>Tools (billed)</label><div class="pmcv">${fmtD(toolsBilled)}</div></div>
+      <div class="pm-cost-item"><label>Sales Tax</label><div class="pmcv">${fmtD(taxAmt)}</div></div>
+      <div class="pm-cost-item"><label>Estimated Grand Total</label><div class="pmcv grand">${fmtD(grand)}</div></div>
+    </div>
+
+    <div class="pm-section">Jose's Notes</div>
+    <textarea class="pm-notes-area" id="pm-jose-notes" placeholder="Add feedback or approval notes...">${escH(po.jose_notes||'')}</textarea>
+
+    <div class="pm-actions">
+      <button class="btn-approve" onclick="approvePO()">✅ Approve — Generate Contract</button>
+      <button class="btn-changes" onclick="requestPOChanges()">↩ Request Changes</button>
+      <span style="flex:1;"></span>
+      <span style="font-size:8pt;color:var(--muted);">Submitted ${new Date(po.created_at).toLocaleDateString()}</span>
+    </div>`;
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePOReview(){
+  const modal = document.getElementById('po-review-modal');
+  if(modal){ modal.classList.remove('open'); }
+  document.body.style.overflow = '';
+}
+
+function approvePO(){
+  const modal = document.getElementById('po-review-modal');
+  const poId  = modal?.dataset.poId;
+  if(!poId) return;
+
+  const notes = document.getElementById('pm-jose-notes')?.value || '';
+  const pos   = loadPOs();
+  const idx   = pos.findIndex(p => p.id === poId);
+  if(idx < 0) return;
+
+  pos[idx].status      = 'approved';
+  pos[idx].jose_notes  = notes;
+  pos[idx].approved_at = new Date().toISOString();
+  pos[idx].approved_by = 'Jose Martinez';
+  savePOs(pos);
+
+  closePOReview();
+  refreshPOInbox();
+  window.open('contract.html?po=' + encodeURIComponent(poId), '_blank');
+}
+
+function requestPOChanges(){
+  const modal = document.getElementById('po-review-modal');
+  const poId  = modal?.dataset.poId;
+  if(!poId) return;
+
+  const notes = (document.getElementById('pm-jose-notes')?.value || '').trim();
+  if(!notes){ alert('Please add notes explaining what changes are needed.'); document.getElementById('pm-jose-notes')?.focus(); return; }
+
+  const pos = loadPOs();
+  const idx = pos.findIndex(p => p.id === poId);
+  if(idx < 0) return;
+
+  pos[idx].status          = 'rejected';
+  pos[idx].jose_notes      = notes;
+  pos[idx].rejected_reason = notes;
+  savePOs(pos);
+
+  closePOReview();
+  refreshPOInbox();
+  alert('Changes requested for ' + poId + '. Maria will see the updated status in her portal.');
+}
+
+// Close modal on backdrop click
+document.getElementById('po-review-modal')?.addEventListener('click', function(e){
+  if(e.target === this) closePOReview();
+});
+
+// Init + auto-refresh every 30s
+document.addEventListener('DOMContentLoaded', refreshPOInbox);
+setInterval(refreshPOInbox, 30000);
+</script>
+</body>
+</html>

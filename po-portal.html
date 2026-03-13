@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFR Purchase Order Portal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@300;400;700&display=swap');
+  :root {
+    --primary:#3A6B5F; --accent:#E07B54; --light:#F2F8F6;
+    --border:#A8CEBF; --muted:#6B7C76; --text:#2D2D2D;
+    --gold:#D4A054; --danger:#C0392B; --success:#27AE60; --warn:#E67E22;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Lato',sans-serif;font-size:10pt;color:var(--text);background:#f0f4f3;}
+  .app{max-width:1440px;margin:0 auto;padding:20px 18px;}
+
+  .top-bar{display:flex;justify-content:space-between;align-items:center;
+    background:var(--primary);color:#fff;padding:13px 22px;border-radius:8px;margin-bottom:18px;}
+  .brand{font-family:'Playfair Display',serif;font-size:14pt;}
+  .brand span{font-family:'Lato',sans-serif;font-size:7.5pt;letter-spacing:2px;text-transform:uppercase;opacity:.7;display:block;margin-top:2px;}
+  .po-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    border-radius:20px;padding:6px 18px;font-size:9pt;text-align:right;line-height:1.7;}
+  .po-pill strong{font-size:12pt;}
+
+  .layout{display:grid;grid-template-columns:310px 1fr;gap:16px;align-items:start;}
+
+  .panel{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:14px;}
+  .p-title{font-family:'Playfair Display',serif;font-size:10.5pt;color:var(--primary);
+    border-bottom:2px solid var(--border);padding-bottom:7px;margin-bottom:12px;}
+
+  .f{margin-bottom:10px;}
+  .f label{display:block;font-size:7.5pt;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+  .f input,.f select{width:100%;border:1px solid var(--border);border-radius:4px;
+    padding:6px 9px;font-family:'Lato',sans-serif;font-size:9.5pt;color:var(--text);outline:none;}
+  .f input:focus,.f select:focus{border-color:var(--primary);}
+  .f input:disabled,.f select:disabled{background:#f5f5f5;color:var(--muted);}
+  .row2{display:flex;gap:8px;}.row2 .f{flex:1;}
+
+  /* SCOPE TABLE */
+  .tbl-wrap{overflow-x:auto;}
+  table.sc{width:100%;border-collapse:collapse;font-size:8pt;min-width:900px;}
+  table.sc thead th{background:var(--primary);color:#fff;padding:7px 5px;text-align:left;
+    font-size:7pt;font-weight:700;letter-spacing:.3px;white-space:nowrap;}
+  table.sc thead th.r{text-align:right;}
+  table.sc tbody td{border-bottom:1px solid #e5ede9;padding:0;vertical-align:middle;}
+  table.sc tbody tr:nth-child(even) td{background:#fafcfb;}
+  table.sc tbody tr:hover td{background:#f0f8f5;}
+  table.sc td input,table.sc td select{width:100%;border:none;background:transparent;
+    padding:5px 5px;font-family:'Lato',sans-serif;font-size:8pt;color:var(--text);outline:none;}
+  table.sc td input.ldesc{text-align:left;}
+  table.sc td input:focus,table.sc td select:focus{background:#e8f5f0;}
+  table.sc td input:disabled,table.sc td select:disabled{color:var(--muted);}
+  table.sc td.lt-num{text-align:center;padding:5px 4px;font-size:7.5pt;color:var(--muted);width:22px;}
+  table.sc tfoot td{border-top:2px solid var(--primary);padding:6px 5px;font-size:8pt;font-weight:700;}
+  table.sc tfoot td.r{text-align:right;}
+  .del-btn{background:none;border:none;color:#ccc;cursor:pointer;font-size:13pt;padding:0 5px;line-height:1;}
+  .del-btn:hover{color:var(--danger);}
+  .add-row-btn{background:var(--light);border:1px dashed var(--border);color:var(--primary);
+    padding:7px 16px;border-radius:4px;cursor:pointer;font-size:9pt;font-weight:700;margin-top:8px;width:100%;}
+  .add-row-btn:hover{background:var(--border);}
+
+  /* TOTALS BAR */
+  .totals-bar{display:flex;gap:20px;flex-wrap:wrap;background:var(--light);border:1px solid var(--border);
+    border-radius:6px;padding:10px 14px;margin-top:10px;}
+  .t-item{display:flex;flex-direction:column;gap:2px;}
+  .t-item label{font-size:7pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+  .t-item .t-val{font-size:11pt;font-weight:700;color:var(--primary);}
+
+  /* STATUS BADGES */
+  .status-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+  .status-draft{background:#e8f5f0;color:var(--primary);}
+  .status-pending{background:#fff3cd;color:#856404;}
+  .status-approved{background:#d4edda;color:#155724;}
+  .status-rejected{background:#f8d7da;color:#721c24;}
+
+  /* LOCKED BANNER */
+  .locked-note{background:#fff3cd;border:1px solid var(--gold);border-radius:5px;
+    padding:9px 12px;font-size:8.5pt;color:#856404;margin-bottom:12px;line-height:1.6;}
+  .rejected-note{background:#f8d7da;border:1px solid #f5c6cb;border-radius:5px;
+    padding:9px 12px;font-size:8.5pt;color:#721c24;margin-bottom:12px;line-height:1.6;}
+
+  /* BUTTONS */
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center;}
+  .btn{padding:10px 22px;border-radius:4px;font-family:'Lato',sans-serif;font-size:10pt;font-weight:700;cursor:pointer;border:none;}
+  .btn-p{background:var(--primary);color:#fff;}.btn-p:hover{background:#2d5448;}
+  .btn-o{background:#fff;color:var(--primary);border:2px solid var(--primary);}.btn-o:hover{background:var(--light);}
+  .btn-a{background:var(--accent);color:#fff;}.btn-a:hover{background:#c56840;}
+  .btn-g{background:var(--success);color:#fff;}.btn-g:hover{background:#1e8449;}
+
+  /* HISTORY */
+  table.hist{width:100%;border-collapse:collapse;font-size:8.5pt;}
+  table.hist th{background:var(--primary);color:#fff;padding:7px 10px;text-align:left;font-size:7.5pt;font-weight:700;letter-spacing:.3px;}
+  table.hist td{border-bottom:1px solid #e5ede9;padding:8px 10px;vertical-align:middle;}
+  table.hist tr:nth-child(even) td{background:#fafcfb;}
+  table.hist tr:hover td{background:#f0f8f5;}
+
+  /* TOAST */
+  #nfr-toast{position:fixed;bottom:24px;right:24px;background:var(--primary);color:#fff;
+    padding:12px 20px;border-radius:8px;font-size:9.5pt;font-weight:700;z-index:9999;
+    box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s;opacity:0;pointer-events:none;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="top-bar">
+  <div class="brand">Natures Friend &amp; Resources
+    <span>Staff Portal — Purchase Order</span>
+  </div>
+  <div class="po-pill">
+    PO Number <strong id="po-display">—</strong><br>
+    <span id="po-meta" style="font-size:8pt;opacity:.8;">Created by Maria &nbsp;·&nbsp; <span id="po-timestamp">—</span></span>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- LEFT: Project Info -->
+<div>
+  <div class="panel">
+    <div class="p-title">Project Information</div>
+    <div class="f"><label>Client Name</label><input type="text" id="client-name" placeholder="Full name or company"></div>
+    <div class="f"><label>Property Address</label><input type="text" id="client-addr" placeholder="Street address"></div>
+    <div class="row2">
+      <div class="f"><label>City</label><input type="text" id="client-city" placeholder="Columbus"></div>
+      <div class="f" style="max-width:80px;"><label>Zip</label><input type="text" id="client-zip" placeholder="43228"></div>
+    </div>
+    <div class="row2">
+      <div class="f"><label>Project Type</label>
+        <select id="proj-type">
+          <option>Kitchen Remodel</option><option>Bathroom Remodel</option>
+          <option>Full Remodel</option><option>Paint / Drywall</option>
+          <option>Cabinets</option><option>Demo</option><option>Flooring</option><option>Other</option>
+        </select>
+      </div>
+      <div class="f"><label>Tax Region</label>
+        <select id="tax-region">
+          <option value="7.5">Columbus (7.5%)</option>
+          <option value="8.0">Dublin (8.0%)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+    </div>
+    <div class="f"><label>Estimated Start Date</label><input type="date" id="start-date"></div>
+    <div class="f"><label>Project Manager</label><input type="text" id="proj-mgr" value="Jose Martinez"></div>
+  </div>
+
+  <div class="panel" id="status-panel" style="display:none;">
+    <div class="p-title">PO Status</div>
+    <div id="status-info"></div>
+  </div>
+</div>
+
+<!-- RIGHT: Scope -->
+<div>
+  <div class="panel">
+    <div class="p-title">Scope of Work — Detailed Line Items</div>
+    <p style="font-size:8pt;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+      Fill in every column with specific detail. These descriptions become the client contract. The more precise the spec and dimensions, the better Jose can price it.
+    </p>
+    <div id="locked-msg" class="locked-note" style="display:none;">
+      ✅ Submitted for Jose's review. Locked for editing. Ask Jose to request changes if revisions are needed.
+    </div>
+    <div id="rejected-msg" class="rejected-note" style="display:none;">
+      ↩ <strong>Jose requested changes:</strong> <span id="rejected-reason"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="sc" id="sc-table">
+        <thead>
+          <tr>
+            <th style="width:22px;">#</th>
+            <th style="width:95px;">Category</th>
+            <th style="min-width:155px;">Line Description</th>
+            <th style="min-width:140px;">Spec / Grade</th>
+            <th style="min-width:120px;">Dimensions / Qty</th>
+            <th class="r" style="width:42px;">Men</th>
+            <th class="r" style="width:52px;">Est Hrs</th>
+            <th class="r" style="width:78px;">Materials $</th>
+            <th class="r" style="width:78px;">Sub $</th>
+            <th class="r" style="width:78px;">Tools/Equip $</th>
+            <th style="min-width:120px;">Notes</th>
+            <th style="width:22px;"></th>
+          </tr>
+        </thead>
+        <tbody id="sc-body"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="color:var(--muted);font-size:7.5pt;padding-left:5px;">TOTALS</td>
+            <td class="r" id="ft-men">—</td>
+            <td class="r" id="ft-hrs">—</td>
+            <td class="r" id="ft-mat">$0.00</td>
+            <td class="r" id="ft-sub">$0.00</td>
+            <td class="r" id="ft-tools">$0.00</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <button class="add-row-btn" id="add-row-btn" onclick="addScopeRow()">+ Add Scope Item</button>
+
+    <div class="totals-bar">
+      <div class="t-item"><label>Total Man-Hours</label><div class="t-val" id="tot-manhrs">0 hrs</div></div>
+      <div class="t-item"><label>Materials</label><div class="t-val" id="tot-mat">$0.00</div></div>
+      <div class="t-item"><label>Sub-Contractor</label><div class="t-val" id="tot-sub">$0.00</div></div>
+      <div class="t-item"><label>Tools / Equip</label><div class="t-val" id="tot-tools">$0.00</div></div>
+      <div class="t-item"><label>Raw Cost Total</label><div class="t-val" id="tot-raw" style="color:var(--accent);">$0.00</div></div>
+    </div>
+  </div>
+
+  <div class="actions" id="action-btns">
+    <button class="btn btn-o" onclick="saveDraft()">Save Draft</button>
+    <button class="btn btn-g" onclick="submitPO()">Submit for Review →</button>
+    <button class="btn btn-a" onclick="newPO()">+ New PO</button>
+  </div>
+</div>
+
+</div><!-- end layout -->
+
+<!-- PO HISTORY -->
+<div class="panel" style="margin-top:4px;">
+  <div class="p-title">PO History</div>
+  <div id="history-empty" style="font-size:8.5pt;color:var(--muted);font-style:italic;padding:6px 0;">
+    No purchase orders yet. Fill out the form above and click Save Draft or Submit for Review.
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="hist" id="hist-table" style="display:none;">
+      <thead>
+        <tr>
+          <th>PO #</th><th>Client</th><th>Project Type</th><th>Submitted</th><th>Status</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="hist-body"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- end app -->
+<div id="nfr-toast"></div>
+
+<script>
+let currentPOId = null;
+let scopeRowCount = 0;
+let isLocked = false;
+const CATEGORIES = ['Drywall','Paint','Flooring','Cabinets','Demo','Tile','Framing','Sub-contract','Tools','Other'];
+
+document.addEventListener('DOMContentLoaded', () => {
+  initNewPO();
+  renderHistory();
+});
+
+// ── PO Counter ────────────────────────────────────────────────────────────────
+function getNextPONumber() {
+  const year = new Date().getFullYear();
+  let counter = parseInt(localStorage.getItem('nfr_po_counter') || '1000');
+  counter++;
+  localStorage.setItem('nfr_po_counter', counter);
+  return `PO-${year}-${String(counter).padStart(4, '0')}`;
+}
+
+// ── Init / Reset ──────────────────────────────────────────────────────────────
+function initNewPO() {
+  currentPOId = getNextPONumber();
+  isLocked = false;
+  document.getElementById('po-display').textContent = currentPOId;
+  const now = new Date();
+  document.getElementById('po-timestamp').textContent = now.toLocaleDateString('en-US',
+    {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'});
+  document.getElementById('status-panel').style.display = 'none';
+  document.getElementById('locked-msg').style.display = 'none';
+  document.getElementById('rejected-msg').style.display = 'none';
+  document.getElementById('add-row-btn').style.display = 'block';
+  resetActionBtns();
+
+  ['client-name','client-addr','client-city','client-zip'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('proj-mgr').value = 'Jose Martinez';
+  document.getElementById('proj-type').selectedIndex = 0;
+  document.getElementById('tax-region').selectedIndex = 0;
+  document.getElementById('start-date').value = '';
+  document.getElementById('sc-body').innerHTML = '';
+  scopeRowCount = 0;
+  addScopeRow(); addScopeRow(); addScopeRow();
+  calcTotals();
+
+  // Enable all project fields
+  document.querySelectorAll('.panel input, .panel select').forEach(el => el.disabled = false);
+}
+
+function resetActionBtns() {
+  document.getElementById('action-btns').innerHTML = `
+    <button class="btn btn-o" onclick="saveDraft()">Save Draft</button>
+    <button class="btn btn-g" onclick="submitPO()">Submit for Review →</button>
+    <button class="btn btn-a" onclick="newPO()">+ New PO</button>`;
+}
+
+// ── Scope Rows ────────────────────────────────────────────────────────────────
+function addScopeRow() {
+  if (isLocked) return;
+  const id = ++scopeRowCount;
+  const tr = document.createElement('tr');
+  tr.id = 'sr' + id;
+  tr.innerHTML = `
+    <td class="lt-num">${id}</td>
+    <td><select id="scat${id}" onchange="calcTotals()">
+      ${CATEGORIES.map(c => `<option>${c}</option>`).join('')}
+    </select></td>
+    <td><input class="ldesc" type="text" id="sdesc${id}" placeholder="Describe the work..." oninput="calcTotals()"></td>
+    <td><input class="ldesc" type="text" id="sspec${id}" placeholder="Grade, type, finish..." oninput="calcTotals()"></td>
+    <td><input class="ldesc" type="text" id="sdim${id}" placeholder="Qty, sqft, sheets..." oninput="calcTotals()"></td>
+    <td><input type="number" min="1" step="1" value="1" id="smen${id}" oninput="calcTotals()"></td>
+    <td><input type="number" min="0" step=".5" placeholder="0" id="shrs${id}" oninput="calcTotals()"></td>
+    <td><input type="number" min="0" step=".01" placeholder="0.00" id="smat${id}" oninput="calcTotals()"></td>
+    <td><input type="number" min="0" step=".01" placeholder="0.00" id="ssub${id}" oninput="calcTotals()"></td>
+    <td><input type="number" min="0" step=".01" placeholder="0.00" id="stools${id}" oninput="calcTotals()"></td>
+    <td><input class="ldesc" type="text" id="snotes${id}" placeholder="Extra notes..." oninput="calcTotals()"></td>
+    <td><button class="del-btn" onclick="delScopeRow(${id})">×</button></td>`;
+  document.getElementById('sc-body').appendChild(tr);
+  renumRows();
+}
+
+function delScopeRow(id) {
+  if (isLocked) return;
+  const el = document.getElementById('sr' + id);
+  if (el) el.remove();
+  renumRows(); calcTotals();
+}
+
+function renumRows() {
+  document.querySelectorAll('#sc-body tr').forEach((tr, i) => {
+    const c = tr.querySelector('.lt-num'); if (c) c.textContent = i + 1;
+  });
+}
+
+function getScopeItems() {
+  const items = [];
+  let idx = 1;
+  document.querySelectorAll('#sc-body tr').forEach(tr => {
+    const id = tr.id.replace('sr', '');
+    const desc  = val('sdesc'  + id);
+    const cat   = val('scat'   + id);
+    const spec  = val('sspec'  + id);
+    const dim   = val('sdim'   + id);
+    const men   = pn('smen'    + id);
+    const hrs   = pn('shrs'    + id);
+    const mat   = pn('smat'    + id);
+    const sub   = pn('ssub'    + id);
+    const tools = pn('stools'  + id);
+    const notes = val('snotes' + id);
+    if (desc || mat || sub || tools || hrs > 0) {
+      items.push({ id: idx++, category: cat, description: desc, spec, dimensions: dim,
+        men, est_hrs: hrs, mat_cost: mat, sub_cost: sub, tools_cost: tools, notes, commission_pct: 0 });
+    }
+  });
+  return items;
+}
+
+function calcTotals() {
+  let totMat = 0, totSub = 0, totTools = 0, realManHrs = 0;
+  document.querySelectorAll('#sc-body tr').forEach(tr => {
+    const id = tr.id.replace('sr', '');
+    const men  = pn('smen'  + id);
+    const hrs  = pn('shrs'  + id);
+    totMat   += pn('smat'   + id);
+    totSub   += pn('ssub'   + id);
+    totTools += pn('stools' + id);
+    realManHrs += men * hrs;
+  });
+  const fmt = n => '$' + (n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('ft-mat').textContent    = fmt(totMat);
+  document.getElementById('ft-sub').textContent    = fmt(totSub);
+  document.getElementById('ft-tools').textContent  = fmt(totTools);
+  document.getElementById('tot-manhrs').textContent = realManHrs.toFixed(1) + ' hrs';
+  document.getElementById('tot-mat').textContent   = fmt(totMat);
+  document.getElementById('tot-sub').textContent   = fmt(totSub);
+  document.getElementById('tot-tools').textContent = fmt(totTools);
+  document.getElementById('tot-raw').textContent   = fmt(totMat + totSub + totTools);
+}
+
+// ── Build PO Object ───────────────────────────────────────────────────────────
+function buildPO(status) {
+  const taxEl = document.getElementById('tax-region');
+  const taxVal = taxEl.value === 'custom'
+    ? (parseFloat(document.getElementById('custom-tax')?.value) || 7.5)
+    : parseFloat(taxEl.value);
+  return {
+    id: currentPOId,
+    created_by: 'Maria',
+    created_at: new Date().toISOString(),
+    status: status,
+    project: {
+      client_name:  val('client-name'),
+      client_addr:  val('client-addr'),
+      client_city:  val('client-city'),
+      client_zip:   val('client-zip'),
+      project_type: val('proj-type'),
+      proj_mgr:     val('proj-mgr') || 'Jose Martinez',
+      start_date:   val('start-date'),
+      tax_region:   String(taxVal)
+    },
+    scope_items:     getScopeItems(),
+    jose_notes:      '',
+    approved_at:     '',
+    approved_by:     '',
+    rejected_reason: '',
+    commission_pct:  0
+  };
+}
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function loadPOs() {
+  try { return JSON.parse(localStorage.getItem('nfr_pos') || '[]'); } catch(e) { return []; }
+}
+function savePOs(pos) { localStorage.setItem('nfr_pos', JSON.stringify(pos)); }
+
+function upsertPO(po) {
+  const pos = loadPOs();
+  const idx = pos.findIndex(p => p.id === po.id);
+  if (idx >= 0) pos[idx] = po; else pos.push(po);
+  savePOs(pos);
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function saveDraft() {
+  if (isLocked) return;
+  upsertPO(buildPO('draft'));
+  renderHistory();
+  showToast('Draft saved — ' + currentPOId);
+}
+
+function submitPO() {
+  if (isLocked) return;
+  if (!val('client-name')) { alert('Please enter a client name before submitting.'); return; }
+  if (getScopeItems().length === 0) { alert('Please add at least one scope item before submitting.'); return; }
+  if (!confirm('Submit ' + currentPOId + ' for Jose\'s review?\n\nYou will not be able to edit it after submission.')) return;
+
+  upsertPO(buildPO('pending_review'));
+  isLocked = true;
+
+  document.getElementById('locked-msg').style.display = 'block';
+  document.getElementById('add-row-btn').style.display = 'none';
+  document.querySelectorAll('#sc-body input, #sc-body select').forEach(el => el.disabled = true);
+  document.querySelectorAll('.panel input, .panel select').forEach(el => el.disabled = true);
+  document.getElementById('action-btns').innerHTML = `
+    <button class="btn btn-a" onclick="newPO()">+ New PO</button>
+    <span style="font-size:9pt;color:var(--success);padding:10px 0;font-weight:700;">✅ Submitted — awaiting Jose's review</span>`;
+  renderHistory();
+  showToast('✅ ' + currentPOId + ' submitted!');
+}
+
+function newPO() {
+  if (!isLocked && val('client-name')) {
+    if (!confirm('Start a new PO? Unsaved changes to this form will be lost.')) return;
+  }
+  initNewPO();
+  renderHistory();
+}
+
+// ── Load draft for editing ────────────────────────────────────────────────────
+function loadPOForEdit(poId) {
+  const pos = loadPOs();
+  const po = pos.find(p => p.id === poId);
+  if (!po) return;
+  if (po.status !== 'draft') { alert('This PO cannot be edited — status: ' + po.status); return; }
+
+  currentPOId = po.id;
+  isLocked = false;
+  document.getElementById('po-display').textContent = po.id;
+  document.getElementById('po-timestamp').textContent = new Date(po.created_at)
+    .toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  document.getElementById('status-panel').style.display = 'none';
+  document.getElementById('locked-msg').style.display = 'none';
+  document.getElementById('rejected-msg').style.display = 'none';
+  document.getElementById('add-row-btn').style.display = 'block';
+  resetActionBtns();
+
+  // Re-enable all inputs
+  document.querySelectorAll('.panel input, .panel select').forEach(el => el.disabled = false);
+
+  // Fill project fields
+  document.getElementById('client-name').value  = po.project.client_name || '';
+  document.getElementById('client-addr').value  = po.project.client_addr || '';
+  document.getElementById('client-city').value  = po.project.client_city || '';
+  document.getElementById('client-zip').value   = po.project.client_zip  || '';
+  document.getElementById('proj-mgr').value     = po.project.proj_mgr    || 'Jose Martinez';
+  document.getElementById('start-date').value   = po.project.start_date  || '';
+  setSelectVal('proj-type', po.project.project_type);
+
+  // Rebuild scope rows
+  document.getElementById('sc-body').innerHTML = '';
+  scopeRowCount = 0;
+  po.scope_items.forEach(item => {
+    const id = ++scopeRowCount;
+    const tr = document.createElement('tr');
+    tr.id = 'sr' + id;
+    tr.innerHTML = `
+      <td class="lt-num">${id}</td>
+      <td><select id="scat${id}" onchange="calcTotals()">
+        ${CATEGORIES.map(c => `<option${c===item.category?' selected':''}>${c}</option>`).join('')}
+      </select></td>
+      <td><input class="ldesc" type="text" id="sdesc${id}" value="${h(item.description)}" oninput="calcTotals()"></td>
+      <td><input class="ldesc" type="text" id="sspec${id}" value="${h(item.spec)}" oninput="calcTotals()"></td>
+      <td><input class="ldesc" type="text" id="sdim${id}" value="${h(item.dimensions)}" oninput="calcTotals()"></td>
+      <td><input type="number" min="1" step="1" value="${item.men||1}" id="smen${id}" oninput="calcTotals()"></td>
+      <td><input type="number" min="0" step=".5" value="${item.est_hrs||''}" id="shrs${id}" oninput="calcTotals()"></td>
+      <td><input type="number" min="0" step=".01" value="${item.mat_cost||''}" id="smat${id}" oninput="calcTotals()"></td>
+      <td><input type="number" min="0" step=".01" value="${item.sub_cost||''}" id="ssub${id}" oninput="calcTotals()"></td>
+      <td><input type="number" min="0" step=".01" value="${item.tools_cost||''}" id="stools${id}" oninput="calcTotals()"></td>
+      <td><input class="ldesc" type="text" id="snotes${id}" value="${h(item.notes)}" oninput="calcTotals()"></td>
+      <td><button class="del-btn" onclick="delScopeRow(${id})">×</button></td>`;
+    document.getElementById('sc-body').appendChild(tr);
+  });
+  calcTotals();
+  window.scrollTo(0, 0);
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const pos = loadPOs().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const empty = document.getElementById('history-empty');
+  const table = document.getElementById('hist-table');
+  const tbody = document.getElementById('hist-body');
+  if (pos.length === 0) { empty.style.display = 'block'; table.style.display = 'none'; return; }
+  empty.style.display = 'none'; table.style.display = 'table';
+  tbody.innerHTML = '';
+  pos.forEach(po => {
+    const dt = new Date(po.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    const sClass = {draft:'status-draft', pending_review:'status-pending',
+      approved:'status-approved', rejected:'status-rejected'}[po.status] || 'status-draft';
+    const sText = {draft:'Draft', pending_review:'Pending Review',
+      approved:'Approved', rejected:'Needs Changes'}[po.status] || po.status;
+    let actionHtml = '';
+    if (po.status === 'draft') {
+      actionHtml = `<button class="btn btn-o" style="padding:4px 12px;font-size:8pt;" onclick="loadPOForEdit('${h(po.id)}')">Edit</button>`;
+    } else if (po.status === 'approved') {
+      actionHtml = `<button class="btn btn-p" style="padding:4px 12px;font-size:8pt;" onclick="window.open('contract.html?po=${encodeURIComponent(po.id)}','_blank')">View Contract</button>`;
+    } else if (po.status === 'rejected') {
+      actionHtml = `<button class="btn btn-a" style="padding:4px 12px;font-size:8pt;" onclick="resubmitPO('${h(po.id)}')">Revise &amp; Resubmit</button>`;
+    } else {
+      actionHtml = '<span style="font-size:8pt;color:var(--muted);">Awaiting review</span>';
+    }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${h(po.id)}</strong></td>
+      <td>${h(po.project.client_name || '—')}</td>
+      <td>${h(po.project.project_type || '—')}</td>
+      <td>${dt}</td>
+      <td><span class="status-badge ${sClass}">${sText}</span></td>
+      <td>${actionHtml}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function resubmitPO(poId) {
+  const pos = loadPOs();
+  const po = pos.find(p => p.id === poId);
+  if (!po) return;
+  // Load it like a draft for editing, then change status back to draft
+  po.status = 'draft';
+  upsertPO(po);
+  loadPOForEdit(poId);
+  if (po.rejected_reason) {
+    document.getElementById('rejected-msg').style.display = 'block';
+    document.getElementById('rejected-reason').textContent = po.rejected_reason;
+  }
+  renderHistory();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+function pn(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function h(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setSelectVal(id, v) {
+  const el = document.getElementById(id); if (!el) return;
+  for (let i = 0; i < el.options.length; i++) { if (el.options[i].value === v || el.options[i].text === v) { el.selectedIndex = i; return; } }
+}
+function showToast(msg) {
+  const t = document.getElementById('nfr-toast');
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._t); t._t = setTimeout(() => t.style.opacity = '0', 3200);
+}
+</script>
+</body>
+</html>

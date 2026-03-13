@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFR Contract</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@300;400;700&display=swap');
+  :root { --primary:#3A6B5F; --accent:#E07B54; --border:#A8CEBF; --text:#2D2D2D; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Lato',sans-serif;font-size:10pt;color:var(--text);background:#f0f4f3;}
+
+  /* PRINT BAR */
+  .print-bar{background:var(--primary);color:#fff;padding:10px 24px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .print-bar span{font-size:9pt;opacity:.85;}
+  .btn-print{background:#fff;color:var(--primary);border:none;border-radius:4px;
+    padding:8px 20px;font-family:'Lato',sans-serif;font-size:9.5pt;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .btn-print:hover{background:#e8f5f0;}
+  .btn-back{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:4px;
+    padding:8px 16px;font-family:'Lato',sans-serif;font-size:9pt;cursor:pointer;}
+  .btn-back:hover{background:rgba(255,255,255,.25);}
+
+  /* CONTRACT BODY */
+  .contract{max-width:820px;margin:24px auto 40px;background:#fff;padding:52px 62px;
+    box-shadow:0 2px 20px rgba(0,0,0,.1);border-radius:4px;}
+
+  /* HEADER */
+  .co-header{text-align:center;border-bottom:3px solid var(--primary);padding-bottom:22px;margin-bottom:26px;}
+  .co-name{font-family:'Playfair Display',serif;font-size:22pt;color:var(--primary);letter-spacing:.5px;}
+  .co-sub{font-size:9pt;color:#777;margin-top:5px;letter-spacing:1px;text-transform:uppercase;}
+  .co-contact{font-size:8.5pt;color:#aaa;margin-top:5px;}
+  .contract-title{font-family:'Playfair Display',serif;font-size:16pt;color:var(--primary);
+    text-align:center;margin:22px 0 20px;}
+
+  /* INFO GRID */
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #ddd;border-radius:4px;
+    overflow:hidden;margin-bottom:26px;}
+  .info-cell{padding:10px 14px;border-bottom:1px solid #eee;}
+  .info-cell:nth-child(odd){border-right:1px solid #eee;background:#fafafa;}
+  .info-cell.full{grid-column:1/-1;}
+  .info-cell label{font-size:7pt;font-weight:700;color:#999;text-transform:uppercase;
+    letter-spacing:.4px;display:block;margin-bottom:3px;}
+  .info-cell .val{font-size:10pt;font-weight:700;}
+
+  /* SECTIONS */
+  .section{margin-bottom:26px;}
+  .section-title{font-family:'Playfair Display',serif;font-size:13pt;color:var(--primary);
+    border-bottom:2px solid var(--border);padding-bottom:8px;margin-bottom:14px;}
+
+  /* SCOPE */
+  ol.scope-list{margin:0;padding-left:20px;}
+  ol.scope-list li{margin-bottom:11px;line-height:1.75;font-size:10pt;}
+  ol.scope-list li .scope-cat{font-size:7.5pt;font-weight:700;color:var(--primary);
+    text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:2px;}
+
+  /* PRICING */
+  .pricing-table{width:100%;border-collapse:collapse;margin-top:8px;}
+  .pricing-table td{padding:10px 14px;border-bottom:1px solid #eee;font-size:9.5pt;}
+  .pricing-table td:last-child{text-align:right;font-weight:700;}
+  .pricing-table .grand-row td{border-top:3px solid var(--primary);font-size:14pt;
+    font-weight:700;color:var(--primary);padding-top:14px;}
+  .pricing-table .tax-row td{color:#888;font-size:8.5pt;}
+
+  /* PAYMENT */
+  .pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;}
+  .pay-card{border:2px solid var(--border);border-radius:6px;padding:14px;text-align:center;}
+  .pay-card .pct{font-size:20pt;font-weight:700;color:var(--primary);line-height:1;}
+  .pay-card .amt{font-size:13pt;font-weight:700;color:var(--accent);margin-top:4px;}
+  .pay-card .lbl{font-size:8pt;color:#777;margin-top:6px;line-height:1.5;}
+
+  /* TERMS */
+  ul.terms-list{list-style:none;padding:0;}
+  ul.terms-list li{padding:7px 0 7px 18px;border-bottom:1px solid #f0f0f0;
+    font-size:9.5pt;line-height:1.65;position:relative;}
+  ul.terms-list li:last-child{border-bottom:none;}
+  ul.terms-list li::before{content:'•';position:absolute;left:0;color:var(--primary);font-weight:700;}
+
+  /* SIGNATURES */
+  .sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:12px;}
+  .sig-block .sig-name{font-size:11pt;font-weight:700;color:var(--primary);}
+  .sig-block .sig-role{font-size:8.5pt;color:#888;margin-top:3px;}
+  .sig-line{border-bottom:1.5px solid #bbb;height:44px;margin:18px 0 5px;}
+  .sig-block .date-label{font-size:8pt;color:#aaa;}
+
+  /* STAMP */
+  .nfr-stamp{border:2px solid var(--border);border-radius:6px;padding:14px 18px;
+    text-align:center;margin-top:28px;}
+  .stamp-name{font-family:'Playfair Display',serif;color:var(--primary);font-size:11pt;}
+  .stamp-sub{font-size:8pt;color:#aaa;margin-top:4px;}
+  .stamp-ref{font-size:7.5pt;color:#ccc;margin-top:6px;}
+
+  /* ERROR */
+  .error-box{background:#c0392b;color:#fff;padding:24px 28px;border-radius:8px;
+    text-align:center;font-size:11pt;max-width:600px;margin:60px auto;line-height:1.7;}
+  .error-box.warn{background:#856404;}
+
+  @media print {
+    body{background:#fff;}
+    .print-bar{display:none!important;}
+    .contract{margin:0;padding:36px 44px;box-shadow:none;max-width:100%;}
+    .info-cell:nth-child(odd){background:#f8f8f8 !important;-webkit-print-color-adjust:exact;}
+    .pay-card{border-color:#ccc;}
+  }
+</style>
+</head>
+<body>
+
+<div class="print-bar" id="print-bar">
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="btn-back" onclick="history.back()">← Back</button>
+    <span id="bar-label">Loading contract…</span>
+  </div>
+  <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+</div>
+
+<div id="contract-root"></div>
+
+<script>
+function qp(n) { return new URLSearchParams(window.location.search).get(n); }
+function loadPOs() { try { return JSON.parse(localStorage.getItem('nfr_pos')||'[]'); } catch(e){ return []; } }
+function fmt(n){ return '$'+(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function h(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(iso){
+  if(!iso) return '—';
+  // handle date-only strings like "2026-04-01" safely
+  const d = iso.length <= 10 ? new Date(iso+'T12:00:00') : new Date(iso);
+  return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+
+function scopeLine(item) {
+  let line = item.description || '(No description)';
+  if (item.spec)       line += ` — ${item.spec}`;
+  if (item.dimensions) line += ` (${item.dimensions})`;
+  if (item.notes)      line += `. Note: ${item.notes}`;
+  return line;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const poId = qp('po');
+  const root = document.getElementById('contract-root');
+
+  if (!poId) {
+    root.innerHTML = '<div class="error-box">No PO ID in URL.<br><small>Use contract.html?po=PO-2026-1001</small></div>';
+    return;
+  }
+
+  const pos = loadPOs();
+  const po  = pos.find(p => p.id === poId);
+
+  if (!po) {
+    root.innerHTML = `<div class="error-box">PO <strong>${h(poId)}</strong> not found in this browser's storage.<br><small>Open this page in the same Chrome/Edge window where the PO was created.</small></div>`;
+    return;
+  }
+  if (po.status !== 'approved') {
+    root.innerHTML = `<div class="error-box warn">PO <strong>${h(poId)}</strong> has not been approved yet.<br><small>Status: ${h(po.status)}</small></div>`;
+    return;
+  }
+
+  document.getElementById('bar-label').textContent = `Contract — ${po.project.client_name || 'Client'} · ${po.id}`;
+  document.title = `NFR Contract — ${po.project.client_name || po.id}`;
+
+  // Pricing
+  const MAT_MU = 0.24, SUB_MU = 0.30, EQ_MU = 0.15, LABOR_RATE = 85;
+  const taxRate = parseFloat(po.project.tax_region) || 7.5;
+
+  let totMat=0, totSub=0, totTools=0, totManHrs=0;
+  (po.scope_items||[]).forEach(item => {
+    totMat   += item.mat_cost   || 0;
+    totSub   += item.sub_cost   || 0;
+    totTools += item.tools_cost || 0;
+    totManHrs += (item.men||1) * (item.est_hrs||0);
+  });
+
+  const laborRev    = totManHrs * LABOR_RATE;
+  const matBilled   = totMat   * (1 + MAT_MU);
+  const subBilled   = totSub   * (1 + SUB_MU);
+  const toolsBilled = totTools * (1 + EQ_MU);
+  const taxAmt      = totMat   * (taxRate / 100);
+  const grand       = laborRev + matBilled + subBilled + toolsBilled + taxAmt;
+
+  const contractDate = fmtDate(po.approved_at || po.created_at);
+  const startDate    = fmtDate(po.project.start_date);
+
+  const scopeItems = (po.scope_items||[]).filter(i => i.description || i.mat_cost > 0 || i.sub_cost > 0);
+  const scopeHtml = scopeItems.length > 0
+    ? `<ol class="scope-list">${scopeItems.map(item => `
+        <li>
+          <span class="scope-cat">${h(item.category)}</span>
+          ${h(scopeLine(item))}
+        </li>`).join('')}</ol>`
+    : '<p style="color:#aaa;font-style:italic;">No scope items defined.</p>';
+
+  const fullAddr = [po.project.client_addr, po.project.client_city, 'OH', po.project.client_zip]
+    .filter(Boolean).join(', ') || '—';
+
+  root.innerHTML = `
+  <div class="contract">
+
+    <div class="co-header">
+      <div class="co-name">Natures Friend &amp; Resources</div>
+      <div class="co-sub">Home Improvement · Columbus, Ohio</div>
+      <div class="co-contact">Licensed &amp; Insured &nbsp;·&nbsp; Columbus, OH</div>
+    </div>
+
+    <div class="contract-title">Home Improvement Contract</div>
+
+    <div class="section">
+      <div class="section-title">Client &amp; Project Information</div>
+      <div class="info-grid">
+        <div class="info-cell"><label>Client Name</label><div class="val">${h(po.project.client_name||'—')}</div></div>
+        <div class="info-cell"><label>Contract Date</label><div class="val">${contractDate}</div></div>
+        <div class="info-cell full"><label>Property Address</label><div class="val">${h(fullAddr)}</div></div>
+        <div class="info-cell"><label>Project Type</label><div class="val">${h(po.project.project_type||'—')}</div></div>
+        <div class="info-cell"><label>Estimated Start Date</label><div class="val">${startDate}</div></div>
+        <div class="info-cell"><label>Project Manager</label><div class="val">${h(po.project.proj_mgr||'Jose Martinez')}</div></div>
+        <div class="info-cell"><label>Contract Reference</label><div class="val">${h(po.id)}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Scope of Work</div>
+      <p style="font-size:9pt;color:#777;margin-bottom:14px;line-height:1.65;">
+        Natures Friend &amp; Resources agrees to perform the following work at the above-referenced property in a workmanlike manner consistent with industry standards:
+      </p>
+      ${scopeHtml}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Contract Price</div>
+      <table class="pricing-table">
+        <tr class="tax-row"><td>Labor, materials, sub-contractors, and equipment as described in scope above</td><td>Included</td></tr>
+        <tr class="tax-row"><td>Sales tax on materials (${taxRate}%)</td><td>${fmt(taxAmt)}</td></tr>
+        <tr class="grand-row"><td>Total Contract Amount</td><td>${fmt(grand)}</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Payment Schedule</div>
+      <div class="pay-grid">
+        <div class="pay-card">
+          <div class="pct">40%</div>
+          <div class="amt">${fmt(grand * 0.4)}</div>
+          <div class="lbl"><strong>Deposit</strong><br>Due upon signing<br>Reserves project start date</div>
+        </div>
+        <div class="pay-card">
+          <div class="pct">40%</div>
+          <div class="amt">${fmt(grand * 0.4)}</div>
+          <div class="lbl"><strong>Progress Payment</strong><br>Due when materials ordered<br>or work is underway</div>
+        </div>
+        <div class="pay-card">
+          <div class="pct">20%</div>
+          <div class="amt">${fmt(grand * 0.2)}</div>
+          <div class="lbl"><strong>Final Payment</strong><br>Due upon completion<br>After walkthrough</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Terms &amp; Conditions</div>
+      <ul class="terms-list">
+        <li>Work will not begin until the deposit has been received in full.</li>
+        <li>Work will pause if the progress payment is not received on schedule.</li>
+        <li>Accepted payment methods: Personal Check, Zelle, or ACH Bank Transfer.</li>
+        <li>Any changes to the scope of work must be agreed to in writing as a signed change order before work proceeds. Additional charges may apply.</li>
+        <li>Natures Friend &amp; Resources is not responsible for damage caused by pre-existing conditions unless disclosed in writing prior to commencement.</li>
+        <li>All work will be performed in a workmanlike manner consistent with industry standards.</li>
+        <li>Client is responsible for clearing personal belongings and furniture from work areas prior to the start date.</li>
+        <li>This contract is valid for 30 days from the contract date above.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Signatures</div>
+      <p style="font-size:9pt;color:#777;margin-bottom:20px;line-height:1.65;">
+        By signing below, both parties agree to the scope of work, total price, payment schedule, and all terms outlined in this contract.
+      </p>
+      <div class="sig-grid">
+        <div class="sig-block">
+          <div class="sig-name">${h(po.project.client_name||'Client')}</div>
+          <div class="sig-role">Property Owner / Client</div>
+          <div class="sig-line"></div>
+          <div class="date-label">Signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-name">Jose Martinez</div>
+          <div class="sig-role">Owner — Natures Friend &amp; Resources</div>
+          <div class="sig-line"></div>
+          <div class="date-label">Signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nfr-stamp">
+      <div class="stamp-name">Natures Friend &amp; Resources</div>
+      <div class="stamp-sub">Columbus, Ohio &nbsp;·&nbsp; Licensed &amp; Insured &nbsp;·&nbsp; Home Improvement Contractor</div>
+      <div class="stamp-ref">${h(po.id)} &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString()}</div>
+    </div>
+
+  </div>`;
+});
+</script>
+</body>
+</html>
