@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFR Agreement Portal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@300;400;700&display=swap');
+  :root {
+    --primary:#3A6B5F; --accent:#E07B54; --light:#F2F8F6;
+    --border:#A8CEBF; --muted:#6B7C76; --text:#2D2D2D;
+    --gold:#D4A054; --danger:#C0392B; --success:#27AE60; --warn:#E67E22;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Lato',sans-serif;font-size:10pt;color:var(--text);background:#f0f4f3;}
+  .app{max-width:1440px;margin:0 auto;padding:20px 18px;}
+
+  .top-bar{display:flex;justify-content:space-between;align-items:center;
+    background:var(--primary);color:#fff;padding:13px 22px;border-radius:8px;margin-bottom:18px;}
+  .brand{font-family:'Playfair Display',serif;font-size:14pt;}
+  .brand span{font-family:'Lato',sans-serif;font-size:7.5pt;letter-spacing:2px;text-transform:uppercase;opacity:.7;display:block;margin-top:2px;}
+  .agr-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    border-radius:20px;padding:6px 18px;font-size:9pt;text-align:right;line-height:1.7;}
+  .agr-pill strong{font-size:12pt;}
+
+  .layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start;}
+
+  .panel{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:14px;}
+  .p-title{font-family:'Playfair Display',serif;font-size:10.5pt;color:var(--primary);
+    border-bottom:2px solid var(--border);padding-bottom:7px;margin-bottom:12px;}
+
+  .f{margin-bottom:10px;}
+  .f label{display:block;font-size:7.5pt;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+  .f input,.f select,.f textarea{width:100%;border:1px solid var(--border);border-radius:4px;
+    padding:6px 9px;font-family:'Lato',sans-serif;font-size:9.5pt;color:var(--text);outline:none;}
+  .f input:focus,.f select:focus,.f textarea:focus{border-color:var(--primary);}
+  .f input:disabled,.f select:disabled,.f textarea:disabled{background:#f5f5f5;color:var(--muted);}
+  .row2{display:flex;gap:8px;}.row2 .f{flex:1;}
+  .row3{display:flex;gap:8px;}.row3 .f{flex:1;}
+
+  .addr-wrap{position:relative;}
+  .addr-badge{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:7.5pt;font-weight:700;white-space:nowrap;}
+  .addr-badge.verified{color:var(--success);}
+  .addr-badge.unverified{color:var(--muted);}
+  .addr-input-padded{padding-right:90px !important;}
+
+  /* MAPS PANEL */
+  .maps-panel{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;}
+  .maps-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+  .maps-header span{font-size:8pt;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;}
+  .maps-status{font-size:7.5pt;color:var(--muted);}
+  .maps-status.connected{color:var(--success);}
+  .maps-settings{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;display:none;}
+  .maps-settings.open{display:block;}
+  .maps-key-row{display:flex;gap:8px;align-items:flex-end;}
+  .maps-key-row .f{flex:1;margin-bottom:0;}
+  .maps-key-row button{padding:6px 12px;border-radius:4px;font-family:'Lato',sans-serif;font-size:8.5pt;font-weight:700;cursor:pointer;border:none;background:var(--primary);color:#fff;white-space:nowrap;}
+
+  /* SCOPE TABLE */
+  .tbl-wrap{overflow-x:auto;}
+  table.sc{width:100%;border-collapse:collapse;font-size:8pt;min-width:1100px;}
+  table.sc thead th{background:var(--primary);color:#fff;padding:7px 5px;text-align:left;
+    font-size:7pt;font-weight:700;letter-spacing:.3px;white-space:nowrap;}
+  table.sc thead th.r{text-align:right;}
+  table.sc thead th.c{text-align:center;}
+  table.sc tbody td{border-bottom:1px solid #e5ede9;padding:0;vertical-align:middle;}
+  table.sc tbody tr:nth-child(even) td{background:#fafcfb;}
+  table.sc tbody tr:hover td{background:#f0f8f5;}
+  table.sc td input,table.sc td select{width:100%;border:none;background:transparent;
+    padding:5px 5px;font-family:'Lato',sans-serif;font-size:8pt;color:var(--text);outline:none;}
+  table.sc td input.ldesc{text-align:left;}
+  table.sc td input:focus,table.sc td select:focus{background:#e8f5f0;}
+  table.sc td input:disabled,table.sc td select:disabled{color:var(--muted);}
+  table.sc td.lt-num{text-align:center;padding:5px 4px;font-size:7.5pt;color:var(--muted);width:22px;}
+  table.sc tfoot td{border-top:2px solid var(--primary);padding:6px 5px;font-size:8pt;font-weight:700;}
+  table.sc tfoot td.r{text-align:right;}
+  .del-btn{background:none;border:none;color:#ccc;cursor:pointer;font-size:13pt;padding:0 5px;line-height:1;}
+  .del-btn:hover{color:var(--danger);}
+  .chk-btn{background:none;border:none;color:var(--primary);cursor:pointer;font-size:12pt;padding:0 4px;line-height:1;}
+  .chk-btn:hover{color:var(--accent);}
+  .add-row-btn{background:var(--light);border:1px dashed var(--border);color:var(--primary);
+    padding:7px 16px;border-radius:4px;cursor:pointer;font-size:9pt;font-weight:700;margin-top:8px;width:100%;}
+  .add-row-btn:hover{background:var(--border);}
+
+  /* TOTALS BAR */
+  .totals-bar{display:flex;gap:20px;flex-wrap:wrap;background:var(--light);border:1px solid var(--border);
+    border-radius:6px;padding:10px 14px;margin-top:10px;}
+  .t-item{display:flex;flex-direction:column;gap:2px;}
+  .t-item label{font-size:7pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+  .t-item .t-val{font-size:11pt;font-weight:700;color:var(--primary);}
+
+  /* STATUS BADGES */
+  .status-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+  .st-draft{background:#e8f5f0;color:var(--primary);}
+  .st-pending_jose{background:#fff3cd;color:#856404;}
+  .st-jose_approved{background:#cce5ff;color:#004085;}
+  .st-sent_to_client{background:#e8d5f5;color:#5a2d7a;}
+  .st-signed{background:#d4edda;color:#155724;}
+  .st-deposit_paid{background:#0d5c2e;color:#fff;}
+  .st-cancelled{background:#f8d7da;color:#721c24;}
+
+  /* LOCKED / INFO BANNERS */
+  .locked-note{background:#fff3cd;border:1px solid var(--gold);border-radius:5px;
+    padding:9px 12px;font-size:8.5pt;color:#856404;margin-bottom:12px;line-height:1.6;}
+  .info-note{background:#e8f5f0;border:1px solid var(--border);border-radius:5px;
+    padding:9px 12px;font-size:8.5pt;color:var(--primary);margin-bottom:12px;line-height:1.6;}
+
+  /* AGENT CHECK PANEL */
+  .agent-panel{background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:14px;}
+  .agent-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;cursor:pointer;}
+  .agent-header-title{font-family:'Playfair Display',serif;font-size:10.5pt;color:var(--primary);}
+  .agent-body{padding:0 18px 16px;display:none;}
+  .agent-body.open{display:block;}
+  .agent-results{margin-top:12px;}
+  .agent-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:8.5pt;}
+  .agent-item:last-child{border-bottom:none;}
+  .agent-icon{font-size:13pt;line-height:1;flex-shrink:0;margin-top:-1px;}
+  .agent-passed{font-size:9pt;color:var(--success);font-style:italic;padding:8px 0;}
+
+  /* BUTTONS */
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center;}
+  .btn{padding:10px 22px;border-radius:4px;font-family:'Lato',sans-serif;font-size:10pt;font-weight:700;cursor:pointer;border:none;}
+  .btn-p{background:var(--primary);color:#fff;}.btn-p:hover{background:#2d5448;}
+  .btn-o{background:#fff;color:var(--primary);border:2px solid var(--primary);}.btn-o:hover{background:var(--light);}
+  .btn-a{background:var(--accent);color:#fff;}.btn-a:hover{background:#c56840;}
+  .btn-g{background:var(--success);color:#fff;}.btn-g:hover{background:#1e8449;}
+  .btn-w{background:var(--warn);color:#fff;}.btn-w:hover{background:#ca6f1e;}
+  .btn-sm{padding:5px 13px;font-size:8pt;}
+
+  /* HISTORY */
+  table.hist{width:100%;border-collapse:collapse;font-size:8.5pt;}
+  table.hist th{background:var(--primary);color:#fff;padding:7px 10px;text-align:left;font-size:7.5pt;font-weight:700;letter-spacing:.3px;}
+  table.hist td{border-bottom:1px solid #e5ede9;padding:8px 10px;vertical-align:middle;}
+  table.hist tr:nth-child(even) td{background:#fafcfb;}
+  table.hist tr:hover td{background:#f0f8f5;}
+
+  /* MODAL */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;}
+  .modal{background:#fff;border-radius:10px;padding:24px 28px;width:480px;max-width:94vw;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.2);}
+  .modal-title{font-family:'Playfair Display',serif;font-size:12pt;color:var(--primary);margin-bottom:16px;}
+  .modal-close{position:absolute;top:14px;right:18px;font-size:16pt;background:none;border:none;cursor:pointer;color:var(--muted);}
+  .modal-close:hover{color:var(--text);}
+  .chk-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;}
+  .chk-item:last-child{border-bottom:none;}
+  .chk-item input[type=checkbox]{margin-top:2px;cursor:pointer;accent-color:var(--primary);}
+  .chk-item-label{font-size:9pt;line-height:1.5;}
+  .chk-progress{font-size:8.5pt;color:var(--muted);margin-bottom:10px;}
+  .modal-footer{margin-top:16px;display:flex;justify-content:flex-end;gap:10px;}
+
+  /* TOAST */
+  #nfr-toast{position:fixed;bottom:24px;right:24px;background:var(--primary);color:#fff;
+    padding:12px 20px;border-radius:8px;font-size:9.5pt;font-weight:700;z-index:9999;
+    box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s;opacity:0;pointer-events:none;}
+
+  /* CUSTOM TAX INPUT */
+  #custom-tax-wrap{display:none;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="top-bar">
+  <div class="brand">Natures Friend &amp; Resources
+    <span>Staff Portal — Client Agreement</span>
+  </div>
+  <div class="agr-pill">
+    Agreement <strong id="agr-display">New Draft</strong><br>
+    <span id="agr-meta" style="font-size:8pt;opacity:.8;">Created by Maria &nbsp;·&nbsp; <span id="agr-timestamp">—</span></span>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- LEFT COLUMN -->
+<div>
+  <div class="panel">
+    <div class="p-title">Project Information</div>
+
+    <div class="f"><label>Client Name</label>
+      <input type="text" id="client-name" placeholder="Full name or company">
+    </div>
+
+    <div class="f"><label>Property Address</label>
+      <div class="addr-wrap">
+        <input type="text" id="client-addr" class="addr-input-padded" placeholder="Street address" autocomplete="off">
+        <span class="addr-badge unverified" id="addr-badge">&#9675; Unverified</span>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="f"><label>City</label><input type="text" id="client-city" placeholder="Columbus"></div>
+      <div class="f" style="max-width:60px;"><label>State</label><input type="text" id="client-state" value="OH" placeholder="OH" maxlength="2"></div>
+      <div class="f" style="max-width:75px;"><label>Zip</label><input type="text" id="client-zip" placeholder="43228" maxlength="10"></div>
+    </div>
+
+    <div class="row2">
+      <div class="f"><label>Client Phone</label><input type="tel" id="client-phone" placeholder="(614) 000-0000"></div>
+      <div class="f"><label>Client Email</label><input type="email" id="client-email" placeholder="client@email.com"></div>
+    </div>
+
+    <div class="f"><label>Project Type</label>
+      <select id="proj-type">
+        <option>Kitchen Remodel</option>
+        <option>Bathroom Remodel</option>
+        <option>Kitchen + Bath Remodel</option>
+        <option>Full Interior Remodel</option>
+        <option>Paint / Drywall</option>
+        <option>Cabinets Only</option>
+        <option>Flooring Only</option>
+        <option>Demo Only</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="row2">
+      <div class="f"><label>Tax Region</label>
+        <select id="tax-region" onchange="handleTaxChange()">
+          <option value="7.5">Columbus (7.5%)</option>
+          <option value="8.0">Dublin (8.0%)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="f" id="custom-tax-wrap"><label>Custom Tax %</label>
+        <input type="number" id="custom-tax" value="7.5" step="0.1" min="0" oninput="calcTotals()">
+      </div>
+    </div>
+
+    <div class="f"><label>Estimated Start Date</label><input type="date" id="start-date"></div>
+    <div class="f"><label>Project Manager</label><input type="text" id="proj-mgr" value="Jose Martinez"></div>
+  </div>
+
+  <!-- GOOGLE MAPS PANEL -->
+  <div class="maps-panel">
+    <div class="maps-header" onclick="toggleMapsSettings()">
+      <span>&#9881; Google Maps</span>
+      <span class="maps-status" id="maps-status">&#9675; Manual entry — add API key to enable address verify</span>
+    </div>
+    <div class="maps-settings" id="maps-settings">
+      <div class="maps-key-row">
+        <div class="f">
+          <label>API Key</label>
+          <input type="password" id="maps-api-key" placeholder="AIzaSy...">
+        </div>
+        <button onclick="saveMapsKey()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS PANEL (shown when editing saved agreement) -->
+  <div class="panel" id="status-panel" style="display:none;">
+    <div class="p-title">Agreement Status</div>
+    <div id="status-info"></div>
+  </div>
+</div>
+
+<!-- RIGHT COLUMN -->
+<div>
+  <div class="panel">
+    <div class="p-title">Scope of Work — Detailed Line Items</div>
+    <p style="font-size:8pt;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+      Fill in every column. These descriptions drive the client-facing agreement. <strong>Client output never shows man-hours, costs, or markup.</strong>
+    </p>
+    <div id="locked-msg" class="locked-note" style="display:none;">
+      Submitted for Jose's review. Form is locked. Ask Jose to reopen if changes are needed.
+    </div>
+    <div id="info-msg" class="info-note" style="display:none;"></div>
+
+    <div class="tbl-wrap">
+      <table class="sc" id="sc-table">
+        <thead>
+          <tr>
+            <th style="width:22px;">#</th>
+            <th style="width:110px;">Category</th>
+            <th style="width:130px;">Sub-Category</th>
+            <th style="min-width:160px;">Description</th>
+            <th style="min-width:110px;">Spec / Grade</th>
+            <th style="min-width:110px;">Dimensions / Qty</th>
+            <th class="r" style="width:42px;">Men</th>
+            <th class="r" style="width:52px;">Est Hrs</th>
+            <th class="r" style="width:78px;">Materials $</th>
+            <th class="r" style="width:68px;">Sub $</th>
+            <th class="r" style="width:72px;">Tools $</th>
+            <th style="min-width:110px;">Sub-Contractor</th>
+            <th class="c" style="width:28px;">&#128203;</th>
+            <th style="width:22px;"></th>
+          </tr>
+        </thead>
+        <tbody id="sc-body"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="6" style="color:var(--muted);font-size:7.5pt;padding-left:5px;">TOTALS</td>
+            <td class="r" id="ft-men">—</td>
+            <td class="r" id="ft-hrs">—</td>
+            <td class="r" id="ft-mat">$0.00</td>
+            <td class="r" id="ft-sub">$0.00</td>
+            <td class="r" id="ft-tools">$0.00</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <button class="add-row-btn" id="add-row-btn" onclick="addScopeRow()">+ Add Scope Item</button>
+
+    <div class="totals-bar">
+      <div class="t-item"><label>Total Man-Hours</label><div class="t-val" id="tot-manhrs">0 hrs</div></div>
+      <div class="t-item"><label>Materials</label><div class="t-val" id="tot-mat">$0.00</div></div>
+      <div class="t-item"><label>Sub-Contractor</label><div class="t-val" id="tot-sub">$0.00</div></div>
+      <div class="t-item"><label>Tools / Equip</label><div class="t-val" id="tot-tools">$0.00</div></div>
+      <div class="t-item"><label>Raw Cost Total</label><div class="t-val" id="tot-raw">$0.00</div></div>
+      <div class="t-item"><label>Est. Grand Total (Jose's rates)</label><div class="t-val" id="tot-grand" style="color:var(--accent);">$0.00</div></div>
+    </div>
+  </div>
+
+  <!-- AGENT CHECK PANEL -->
+  <div class="agent-panel">
+    <div class="agent-header" onclick="toggleAgentPanel()">
+      <span class="agent-header-title">Pre-Submission Check</span>
+      <span id="agent-chevron" style="font-size:10pt;color:var(--muted);">&#9660;</span>
+    </div>
+    <div class="agent-body" id="agent-body">
+      <button class="btn btn-o btn-sm" onclick="runAgentCheck()" id="run-check-btn">Run Pre-Submission Check</button>
+      <div id="agent-results" class="agent-results"></div>
+    </div>
+  </div>
+
+  <div class="actions" id="action-btns">
+    <button class="btn btn-o" onclick="saveDraft()">Save Draft</button>
+    <button class="btn btn-w" onclick="runAgentCheck()">Run Agent Check</button>
+    <button class="btn btn-g" id="submit-btn" onclick="submitForJose()" disabled title="Run Agent Check first">Submit for Jose's Review</button>
+    <button class="btn btn-a" onclick="newAgreement()">+ New Agreement</button>
+  </div>
+</div>
+
+</div><!-- end layout -->
+
+<!-- HISTORY TABLE -->
+<div class="panel" style="margin-top:4px;">
+  <div class="p-title">Agreement History</div>
+  <div id="history-empty" style="font-size:8.5pt;color:var(--muted);font-style:italic;padding:6px 0;">
+    No agreements yet. Fill out the form above and click Save Draft.
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="hist" id="hist-table" style="display:none;">
+      <thead>
+        <tr>
+          <th>AGR #</th><th>Client</th><th>Type</th><th>Submitted</th><th>Status</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="hist-body"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- end app -->
+
+<!-- CHECKLIST MODAL -->
+<div class="modal-backdrop" id="chk-modal" style="display:none;" onclick="closeChecklistModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeChecklistModal()">&#215;</button>
+    <div class="modal-title" id="chk-modal-title">Checklist</div>
+    <div class="chk-progress" id="chk-progress"></div>
+    <div id="chk-items"></div>
+    <div class="modal-footer">
+      <button class="btn btn-p" onclick="closeChecklistModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div id="nfr-toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentAgrId = null;
+let scopeRowCount = 0;
+let isLocked = false;
+let agentCheckRan = false;
+let addressVerified = false;
+let activeChecklistRow = null;
+
+// ── Renovation Taxonomy ────────────────────────────────────────────────────────
+const RENO = {
+  "Demo & Site Prep": {
+    subs: ["Demo cabinets","Demo countertops","Demo tile — floor","Demo tile — walls","Demo flooring","Demo tub/shower","Demo toilet","Demo vanity & fixtures","Demo walls / partitions","Demo ceiling","Demo appliances & removal","Dumpster / haul away","Site protection & staging"],
+    desc: {"Demo cabinets":"Remove and haul away all existing cabinets","Demo countertops":"Remove existing countertops and dispose","Demo tile — floor":"Remove floor tile and thin-set; inspect subfloor","Demo tile — walls":"Remove wall tile and backer board","Demo flooring":"Remove existing flooring and prep subfloor","Demo tub/shower":"Demo tub/shower unit and surround","Demo toilet":"Remove and cap toilet flange","Demo vanity & fixtures":"Remove vanity, sink, and all fixtures","Demo walls / partitions":"Remove non-structural partition walls","Demo ceiling":"Remove ceiling drywall or tile","Demo appliances & removal":"Disconnect and remove all appliances","Dumpster / haul away":"Roll-off dumpster and debris removal","Site protection & staging":"Floor protection, plastic barriers, staging area"},
+    checks: {"Demo cabinets":["Disconnect power at breaker","Remove cabinet doors first","Mark/cap utility locations","Protect floors with plywood","Stage debris area outside"],"Demo tile — floor":["Score grout lines first","Remove toilet/vanity if needed","Inspect subfloor after removal","Document condition with photos"],"Demo tub/shower":["Shut off water supply","Disconnect drain","Remove tile surround","Inspect framing/subfloor for rot"],"Demo walls / partitions":["Confirm non-load-bearing","Locate and cap all utilities in wall","Remove drywall in stages","Photograph wall cavity before closing"]}
+  },
+  "Structural": {
+    subs: ["Load-bearing wall removal","Header / beam install (LVL)","Header / beam install (steel)","Subfloor repair / replacement","Wall framing modification","Niche / alcove framing","Column / post install","Subfloor leveling"],
+    desc: {"Load-bearing wall removal":"Remove load-bearing wall with temporary shoring","Header / beam install (LVL)":"Install LVL beam with proper bearing","Header / beam install (steel)":"Install steel beam with bearing plates","Subfloor repair / replacement":"Repair or replace damaged subfloor sheathing","Wall framing modification":"Modify existing wall framing per plan","Niche / alcove framing":"Frame recessed niche or alcove in wall","Column / post install":"Install structural column or decorative post","Subfloor leveling":"Self-leveling compound or shimming for flat substrate"},
+    checks: {"Load-bearing wall removal":["Pull permit before starting","Install temporary shoring","Size header per engineer spec","Verify beam bearing on each side"],"Subfloor repair / replacement":["Identify source of damage (moisture/rot)","Remove all damaged material","Treat with antimicrobial before closing","Match thickness to existing floor"]}
+  },
+  "Windows & Doors": {
+    subs: ["Window replacement","Window — new opening","Window trim / casing","Entry door replacement","Interior door install","Pocket / sliding door","Barn door","Door hardware install","Egress window"],
+    desc: {"Window replacement":"Replace existing window with new unit, same opening","Window — new opening":"Create new window opening with header","Window trim / casing":"Install interior window casing and sill","Entry door replacement":"Replace exterior entry door and frame","Interior door install":"Install interior door, frame, and hardware","Pocket / sliding door":"Install pocket or bypass sliding door","Barn door":"Install barn door with track hardware","Door hardware install":"Install handles, locks, hinges on existing doors","Egress window":"Install code-compliant egress window"},
+    checks: {"Window replacement":["Flash and seal exterior","Level and shim properly","Insulate perimeter","Test operation before trimming"],"Entry door replacement":["Flash threshold properly","Install weatherstripping","Verify plumb and square","Test lockset operation"]}
+  },
+  "Rough Electrical": {
+    subs: ["Panel upgrade / circuit add","GFCI circuit — kitchen","GFCI circuit — bathroom","Under-cabinet lighting rough","Island lighting rough","Range hood wiring","Dishwasher circuit (20A)","Refrigerator circuit","Microwave circuit (20A)","Heated floor thermostat rough","Exhaust fan rough-in","Shower light rough (wet-rated)","Vanity lighting rough","USB outlet install","Recessed lighting rough"],
+    desc: {"Panel upgrade / circuit add":"Add circuits or upgrade electrical panel","GFCI circuit — kitchen":"Install GFCI-protected circuits per code","GFCI circuit — bathroom":"Install GFCI-protected bathroom circuit","Under-cabinet lighting rough":"Run low-voltage wire for under-cabinet lights","Island lighting rough":"Run wire and install junction box for island pendant","Range hood wiring":"Wire dedicated circuit for range hood","Dishwasher circuit (20A)":"Dedicated 20A circuit for dishwasher","Refrigerator circuit":"Dedicated circuit for refrigerator","Microwave circuit (20A)":"Dedicated 20A circuit for microwave","Heated floor thermostat rough":"Run wire for in-floor heat thermostat","Exhaust fan rough-in":"Run wire and duct for bathroom exhaust fan","Shower light rough (wet-rated)":"Install wet-rated box and wiring in shower ceiling","Vanity lighting rough":"Run wire for vanity light fixture","USB outlet install":"Install combination outlet with USB ports","Recessed lighting rough":"Run wire and install cans for recessed lights"},
+    checks: {"Panel upgrade / circuit add":["Pull permit","Coordinate with licensed electrician","Arc-fault and GFCI per code","Label panel directory after"],"GFCI circuit — kitchen":["Two 20A small-appliance circuits minimum","GFCI at first outlet on circuit","Test trip function"],"Exhaust fan rough-in":["Duct to exterior — not to attic","Damper on exterior cap","Support fan housing to framing"]}
+  },
+  "Rough Plumbing": {
+    subs: ["Supply line relocation","Drain relocation","Toilet flange install","Shower valve rough-in","Tub drain rough-in","Dishwasher connection rough","Ice maker line","Gas line (range / cooktop)","Gas line (water heater)","Water heater relocation","Wet wall framing"],
+    desc: {"Supply line relocation":"Relocate hot/cold supply to new position","Drain relocation":"Relocate drain line to new fixture location","Toilet flange install":"Set toilet flange at finished floor height","Shower valve rough-in":"Set shower valve body at correct height","Tub drain rough-in":"Set tub drain and overflow rough","Dishwasher connection rough":"Stub out hot supply and drain for dishwasher","Ice maker line":"1/4\" copper or poly line for refrigerator ice maker","Gas line (range / cooktop)":"Run gas line with shutoff for range/cooktop","Gas line (water heater)":"Run or extend gas line for water heater","Water heater relocation":"Relocate water heater with new connections","Wet wall framing":"Frame 2x6 wet wall for back-to-back plumbing"},
+    checks: {"Supply line relocation":["Pressure test before closing wall","Support pipe per code","Insulate exterior wall pipes"],"Shower valve rough-in":["Confirm valve height per design drawing","Stub out at correct height for trim plate","Pressure test","Photo before closing wall"],"Gas line (range / cooktop)":["Licensed plumber required","Pressure test 24 hours","Install shutoff within 6 feet of appliance"]}
+  },
+  "HVAC & Mechanicals": {
+    subs: ["Range hood / ductwork","Exhaust fan + duct install","Radiant floor heat — electric","Radiant floor heat — hydronic","In-floor heat thermostat","Heated towel bar rough","HVAC duct modification","Mini-split install"],
+    desc: {"Range hood / ductwork":"Install range hood and run duct to exterior","Exhaust fan + duct install":"Install exhaust fan and duct to exterior cap","Radiant floor heat — electric":"Install electric radiant mat under tile","Radiant floor heat — hydronic":"Install hydronic tubing in floor","In-floor heat thermostat":"Install programmable thermostat for floor heat","Heated towel bar rough":"Rough wire for electric heated towel bar","HVAC duct modification":"Modify existing ductwork for remodel","Mini-split install":"Install ductless mini-split head and lineset"},
+    checks: {"Range hood / ductwork":["Duct to exterior only","Use 6\" round or equivalent rectangular","Include damper at exterior","Verify CFM meets hood requirements"],"Radiant floor heat — electric":["Test mat resistance before tile","Do not cut mat","Install insulation board under mat","Connect to GFCI-protected circuit"]}
+  },
+  "Insulation": {
+    subs: ["Exterior wall batt insulation","Sound insulation — interior","Spray foam — rim joist","Spray foam — gaps/penetrations","Vapor barrier","Rigid foam — exterior"],
+    desc: {"Exterior wall batt insulation":"Install batt insulation in exterior walls","Sound insulation — interior":"Install Rockwool sound batt in interior walls","Spray foam — rim joist":"Seal and insulate rim joist with closed-cell foam","Spray foam — gaps/penetrations":"Air seal all penetrations with spray foam","Vapor barrier":"Install poly vapor barrier on crawl/slab","Rigid foam — exterior":"Install rigid foam board on exterior sheathing"},
+    checks: {}
+  },
+  "Waterproofing": {
+    subs: ["Cement board / backer board","Schluter / Kerdi membrane","RedGard waterproof coating","Shower pan liner (CPE)","Curb installation","Shower niche — waterproof"],
+    desc: {"Cement board / backer board":"Install cement backer board in wet areas","Schluter / Kerdi membrane":"Apply Kerdi waterproof membrane over substrate","RedGard waterproof coating":"Apply RedGard liquid membrane to shower walls/floor","Shower pan liner (CPE)":"Install CPE shower pan liner with clamping drain","Curb installation":"Build and waterproof shower curb","Shower niche — waterproof":"Frame, board, and waterproof recessed shower niche"},
+    checks: {"Cement board / backer board":["Stagger seams from drywall seams","Tape all seams with alkali-resistant mesh","Do not use drywall in wet zone","Fasteners every 8\" at edges"],"Schluter / Kerdi membrane":["Overlap seams minimum 2\"","Seal all corners with Kerdi-Band","Let cure 24 hours before tile","Flood test before closing"]}
+  },
+  "Drywall": {
+    subs: ["Drywall install — standard","Drywall install — moisture-resistant","Level 5 finish","Ceiling drywall","Drywall repair / patch","Skim coat"],
+    desc: {"Drywall install — standard":"Hang and tape standard drywall","Drywall install — moisture-resistant":"Hang and tape moisture-resistant (green/purple board)","Level 5 finish":"Apply two skim coats for Level 5 paint-ready finish","Ceiling drywall":"Hang and finish ceiling drywall","Drywall repair / patch":"Repair damaged drywall sections","Skim coat":"Skim coat existing walls for smooth finish"},
+    checks: {"Level 5 finish":["Prime coat before first skim","Two skim coats minimum","Sand between coats with 150 grit","Inspect under raking light before paint"],"Drywall install — standard":["Stagger seams","Screw 16\" on center","Tape all seams with joint compound","Feather edges for smooth finish"]}
+  },
+  "Tile Work": {
+    subs: ["Floor tile install","Shower wall tile","Tub surround tile","Backsplash tile","Niche tile","Accent / listello tile","Floor tile — large format","Grout & seal","Caulk joints"],
+    desc: {"Floor tile install":"Install tile on floor with thinset mortar","Shower wall tile":"Install tile on shower walls","Tub surround tile":"Install tile on tub surround walls","Backsplash tile":"Install kitchen backsplash tile","Niche tile":"Tile recessed shower niche","Accent / listello tile":"Install accent or border tile","Floor tile — large format":"Install large format (24\"x24\"+) floor tile","Grout & seal":"Apply grout and sealer to all tile joints","Caulk joints":"Apply silicone caulk at all change-of-plane joints"},
+    checks: {"Floor tile install":["Dry-lay tile for pattern/cut check","Use large-format trowel for full coverage","Check level every 4 tiles","Back-butter all tiles over 15\""],"Shower wall tile":["Start from center of focal wall","Maintain consistent grout joints","Cut tiles at perimeter","Seal grout after 72-hour cure"],"Grout & seal":["Mix to peanut butter consistency","Work in 4 sq ft sections","Diagonal float strokes","Seal 72 hours after grout install"]}
+  },
+  "Flooring": {
+    subs: ["LVP / luxury vinyl install","Hardwood — install","Hardwood — refinish","Carpet install","Floor leveling / prep","Transition strips","Underlayment install"],
+    desc: {"LVP / luxury vinyl install":"Install luxury vinyl plank flooring with underlayment","Hardwood — install":"Install nail-down or glue-down hardwood","Hardwood — refinish":"Sand, stain, and refinish existing hardwood","Carpet install":"Install carpet with pad","Floor leveling / prep":"Self-leveling compound for flat substrate","Transition strips":"Install transition strips at all floor changes","Underlayment install":"Install foam or cork underlayment"},
+    checks: {"LVP / luxury vinyl install":["Acclimate planks 48 hours","Leave 1/4\" expansion gap at walls","Stagger end joints minimum 6\"","Roll floor after install"],"Hardwood — refinish":["Screen between coats","Buff edges by hand","Apply minimum 3 coats polyurethane","24-hour dry time between coats"]}
+  },
+  "Cabinets": {
+    subs: ["Base cabinets","Upper cabinets","Island / peninsula cabinets","Pantry / tall cabinets","Vanity cabinet","Linen / storage cabinet","Medicine cabinet","Cabinet hardware install","Soft-close hardware","Crown molding — cabinets","Cabinet trim / filler","Cabinet lighting install"],
+    desc: {"Base cabinets":"Install base cabinet run","Upper cabinets":"Install upper cabinet run","Island / peninsula cabinets":"Install island or peninsula cabinet base","Pantry / tall cabinets":"Install full-height pantry or utility cabinets","Vanity cabinet":"Install bathroom vanity cabinet","Linen / storage cabinet":"Install linen or storage cabinet","Medicine cabinet":"Install recessed or surface-mount medicine cabinet","Cabinet hardware install":"Install all pulls, knobs, and hinges","Soft-close hardware":"Install soft-close hinges and drawer slides","Crown molding — cabinets":"Install crown molding on cabinet tops","Cabinet trim / filler":"Install filler strips and end panels","Cabinet lighting install":"Install puck or strip lights in cabinets"},
+    checks: {"Base cabinets":["Level each cabinet — shim as needed","Screw cabinets together before wall attachment","Attach to wall studs only","Check plumb and level after all are hung"],"Upper cabinets":["Ledger board for support during install","Locate all studs before starting","Check level and plumb every cabinet","Remove ledger after all are secured"]}
+  },
+  "Countertops": {
+    subs: ["Granite — fabricate & install","Quartz — fabricate & install","Laminate countertop","Cultured marble top","Butcher block","Concrete countertop","Countertop edge profile","Backsplash substrate"],
+    desc: {"Granite — fabricate & install":"Template, fabricate, and install granite countertop","Quartz — fabricate & install":"Template, fabricate, and install quartz countertop","Laminate countertop":"Install laminate countertop with post-form edge","Cultured marble top":"Install cultured marble vanity top with integral sink","Butcher block":"Install butcher block countertop","Concrete countertop":"Cast and install concrete countertop","Countertop edge profile":"Specify edge detail (eased, beveled, ogee, etc.)","Backsplash substrate":"Install cement board for tile backsplash"},
+    checks: {"Granite — fabricate & install":["Template after cabinets are set","Confirm sink cutout dimensions","Seam placement away from sink","Support seams from below"],"Quartz — fabricate & install":["Template after cabinets leveled","Confirm overhang spec (standard 1.5\")","Check plumb of sink wall for reveal"]}
+  },
+  "Shower / Tub": {
+    subs: ["Prefab shower unit","Custom tile shower build","Shower door — frameless","Shower door — semi-frameless","Shower door — framed","Shower base / pan","Standard tub install","Freestanding / soaking tub","Whirlpool / jetted tub","Grab bar install","Steam unit install","Tub surround install"],
+    desc: {"Prefab shower unit":"Install one-piece or multi-piece prefab shower unit","Custom tile shower build":"Build custom shower with backer, membrane, and tile","Shower door — frameless":"Install frameless glass shower door or enclosure","Shower door — semi-frameless":"Install semi-frameless shower door","Shower door — framed":"Install aluminum-framed shower door","Shower base / pan":"Install shower base/pan (acrylic or fiberglass)","Standard tub install":"Install alcove or drop-in tub","Freestanding / soaking tub":"Install freestanding soaking tub","Whirlpool / jetted tub":"Install whirlpool or air-jet tub","Grab bar install":"Install ADA grab bars in shower/tub area","Steam unit install":"Install steam generator and head","Tub surround install":"Install 3-piece tub surround"},
+    checks: {"Custom tile shower build":["Waterproof membrane required","Slope floor 1/4\" per foot to drain","Test drain before tiling","Float test shower pan 24 hours"],"Shower door — frameless":["Confirm glass thickness (3/8\" min)","Plumb wall within 1/8\"","Header bar for doors over 60\" wide","Silicone all perimeter joints"]}
+  },
+  "Fixtures & Plumbing Finish": {
+    subs: ["Kitchen sink install","Bathroom sink — undermount","Vessel sink install","Kitchen faucet","Bathroom faucet","Shower valve trim","Showerhead install","Hand shower install","Tub faucet / trim","Tub spout","Body sprays","Garbage disposal","Toilet install","Bidet / toilet seat","P-trap & drain connections","Shut-off valves"],
+    desc: {"Kitchen sink install":"Install undermount or drop-in kitchen sink","Bathroom sink — undermount":"Install undermount bathroom sink","Vessel sink install":"Install vessel sink with drain assembly","Kitchen faucet":"Install kitchen faucet and supply lines","Bathroom faucet":"Install bathroom faucet and pop-up drain","Shower valve trim":"Install shower valve trim plate and handle","Showerhead install":"Install showerhead on arm","Hand shower install":"Install slide bar and hand shower","Tub faucet / trim":"Install tub faucet trim and handles","Tub spout":"Install tub spout (diverter or non-diverter)","Body sprays":"Install body spray jets and volume control","Garbage disposal":"Install garbage disposal and wiring connection","Toilet install":"Set toilet on flange with new wax ring","Bidet / toilet seat":"Install bidet seat or attachment","P-trap & drain connections":"Connect P-traps and drain lines","Shut-off valves":"Install angle stops at all fixtures"},
+    checks: {"Kitchen sink install":["Support undermount from below before countertop","Caulk perimeter after cabinet install","Test for leaks 24 hours after"],"Toilet install":["New wax ring required","Shim base if floor unlevel","Caulk front and sides (leave back open)","Test flush and check for leaks"]}
+  },
+  "Appliances": {
+    subs: ["Range / cooktop install","Wall oven install","Microwave install","Dishwasher install","Refrigerator — water line","Range hood — final install","Warming drawer"],
+    desc: {"Range / cooktop install":"Set and connect range or cooktop (gas or electric)","Wall oven install":"Install wall oven in cabinet opening","Microwave install":"Install over-range or drawer microwave","Dishwasher install":"Set dishwasher and connect water/drain/power","Refrigerator — water line":"Connect refrigerator to ice maker water line","Range hood — final install":"Final mount and duct connection for range hood","Warming drawer":"Install warming drawer in base cabinet"},
+    checks: {"Range / cooktop install":["Anti-tip bracket for ranges","Verify gas connection by licensed plumber","Test all burners","Clearances per manufacturer"],"Dishwasher install":["High-loop or air gap on drain","Secure to cabinet sides","Test full cycle for leaks"]}
+  },
+  "Finish Electrical": {
+    subs: ["Outlet & switch plates","Light fixture install","Under-cabinet lights — final","Recessed lighting — final","Dimmer switch install","Exhaust fan — final","Bathroom fan/light combo","GFCI outlets — final","Smoke / CO detector"],
+    desc: {"Outlet & switch plates":"Install all outlet and switch cover plates","Light fixture install":"Install light fixtures and connect wiring","Under-cabinet lights — final":"Connect and install under-cabinet LED strips","Recessed lighting — final":"Trim and bulb all recessed cans","Dimmer switch install":"Install dimmer switches per plan","Exhaust fan — final":"Install exhaust fan grille and test","Bathroom fan/light combo":"Install combination fan/light unit","GFCI outlets — final":"Install GFCI receptacles and test","Smoke / CO detector":"Install smoke and CO detectors per code"},
+    checks: {"Recessed lighting — final":["IC-rated cans in insulated ceiling","Trim flush to ceiling","Bulb type matches dimmer rating"],"GFCI outlets — final":["Test trip function","Label breaker","Check all outlets downstream on same circuit"]}
+  },
+  "Paint & Finish": {
+    subs: ["Ceiling paint","Wall paint — standard","Wall paint — moisture-resistant","Cabinet paint / stain","Trim paint","Exterior paint / touch-up"],
+    desc: {"Ceiling paint":"Apply two coats ceiling paint","Wall paint — standard":"Prime and apply two coats wall paint","Wall paint — moisture-resistant":"Apply moisture-resistant paint (bathroom)","Cabinet paint / stain":"Prime, sand, and apply two coats cabinet paint","Trim paint":"Apply semi-gloss on all trim and doors","Exterior paint / touch-up":"Touch up or repaint exterior trim/siding"},
+    checks: {"Cabinet paint / stain":["Sand between all coats 220 grit","Remove all hardware before painting","Water-based enamel or conversion varnish","Allow 24h cure between coats"],"Wall paint — standard":["Cut in before rolling","Two coats minimum","Check sheen spec (eggshell, satin, flat)","Back-roll sprayed areas"]}
+  },
+  "Trim & Millwork": {
+    subs: ["Baseboard","Door casing","Crown molding","Window sill / stool / apron","Chair rail","Wainscoting","Beadboard panel","Built-in shelving"],
+    desc: {"Baseboard":"Install baseboard throughout room","Door casing":"Install interior door casing","Crown molding":"Install crown molding at ceiling","Window sill / stool / apron":"Install window interior trim","Chair rail":"Install chair rail at mid-wall height","Wainscoting":"Install wainscoting panel system","Beadboard panel":"Install beadboard on wall section","Built-in shelving":"Build and install custom built-in shelves"},
+    checks: {"Crown molding":["Cope inside corners — no miters","Nail to studs and top plate","Caulk before paint","Prime cut ends before install"],"Baseboard":["Cope inside corners","Scarf joint at splices","Check for floor height changes","Fill nail holes before paint"]}
+  },
+  "Bathroom Accessories": {
+    subs: ["Towel bar install","Toilet paper holder","Robe hooks","Mirror install","Frameless mirror","Shelving — bathroom","Towel ring"],
+    desc: {"Towel bar install":"Install towel bar(s) on blocking","Toilet paper holder":"Install toilet paper holder on blocking","Robe hooks":"Install robe hooks on blocking","Mirror install":"Install framed mirror above vanity","Frameless mirror":"Install frameless mirror on wall","Shelving — bathroom":"Install bathroom shelving unit","Towel ring":"Install towel ring next to vanity"},
+    checks: {"Towel bar install":["Block in wall during framing","Confirm height (48\" standard)","Use toggle anchors if no blocking"]}
+  },
+  "Exterior & Siding": {
+    subs: ["Vinyl siding — repair","Vinyl siding — replacement","Brick repair / repointing","Tuckpointing","Brick veneer install","Exterior trim repair","Caulk & weatherstrip","Soffit / fascia repair","Window flashing"],
+    desc: {"Vinyl siding — repair":"Repair damaged vinyl siding panels","Vinyl siding — replacement":"Replace vinyl siding on wall section","Brick repair / repointing":"Repoint deteriorated brick mortar joints","Tuckpointing":"Tuckpoint brick or block joints","Brick veneer install":"Install brick veneer over framed wall","Exterior trim repair":"Repair or replace exterior trim boards","Caulk & weatherstrip":"Caulk all exterior penetrations and install weatherstrip","Soffit / fascia repair":"Repair or replace soffit and fascia boards","Window flashing":"Install or repair window flashing and sill pan"},
+    checks: {"Brick repair / repointing":["Match existing mortar color","Rake joints minimum 3/4\" deep","Dampen joints before applying mortar","Cure slowly — avoid direct sun for 3 days"]}
+  },
+  "Sub-Contractors": {
+    subs: ["Licensed plumber","Licensed electrician","HVAC technician","Structural engineer","Tile setter","Flooring installer","Cabinet installer","Countertop fabricator","Glass / shower door","Painter — sub","Roofer / flashing sub","Foundation / masonry sub"],
+    desc: {"Licensed plumber":"Licensed plumber for rough or finish work","Licensed electrician":"Licensed electrician for panel/rough/finish","HVAC technician":"HVAC tech for ductwork or mechanical","Structural engineer":"PE stamp for structural modifications","Tile setter":"Sub-contract tile installation","Flooring installer":"Sub-contract flooring installation","Cabinet installer":"Sub-contract cabinet installation","Countertop fabricator":"Sub-contract countertop template and install","Glass / shower door":"Sub-contract frameless glass and shower door","Painter — sub":"Sub-contract painting","Roofer / flashing sub":"Sub-contract roofing or flashing work","Foundation / masonry sub":"Sub-contract foundation or masonry work"},
+    checks: {"Licensed plumber":["Verify license number","Confirm liability insurance","Get signed scope buyout","Pull permit in their name if required"],"Licensed electrician":["Verify license number","Confirm liability insurance","Get signed scope buyout","Pull permit in their name if required"]}
+  },
+  "Permits & Inspections": {
+    subs: ["Building permit","Electrical permit","Plumbing permit","Mechanical permit","Inspection — rough-in","Inspection — final","Certificate of occupancy"],
+    desc: {"Building permit":"Pull building permit for remodel work","Electrical permit":"Pull electrical permit","Plumbing permit":"Pull plumbing permit","Mechanical permit":"Pull mechanical/HVAC permit","Inspection — rough-in":"Schedule rough-in inspection","Inspection — final":"Schedule final inspection","Certificate of occupancy":"Obtain certificate of occupancy if required"},
+    checks: {}
+  },
+  "Other": {
+    subs: ["Custom item (specify)","Allowance item","Owner-furnished / contractor-installed","Miscellaneous labor","Final cleaning"],
+    desc: {"Custom item (specify)":"Custom scope item — add description","Allowance item":"Budget allowance for undetermined item","Owner-furnished / contractor-installed":"Owner provides material, NFR installs","Miscellaneous labor":"General labor not categorized above","Final cleaning":"Final clean and punch-list cleanup"},
+    checks: {}
+  }
+};
+
+const RENO_CATS = Object.keys(RENO);
+
+// ── Row checklist data store (keyed by row id) ────────────────────────────────
+const rowChecklists = {};   // rowChecklists[rowId] = { items: [...], done: [...] }
+
+// ── DOM Ready ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initMapsPanel();
+  initNewAgreement();
+  renderHistory();
+});
+
+// ── Agreement ID ──────────────────────────────────────────────────────────────
+function getNextAgrId() {
+  const year = new Date().getFullYear();
+  let counter = parseInt(localStorage.getItem('nfr_agr_counter') || '1000');
+  counter++;
+  localStorage.setItem('nfr_agr_counter', counter);
+  return `AGR-${year}-${counter}`;
+}
+
+// ── Init / Reset ──────────────────────────────────────────────────────────────
+function initNewAgreement() {
+  currentAgrId = null;
+  scopeRowCount = 0;
+  isLocked = false;
+  agentCheckRan = false;
+  addressVerified = false;
+  document.getElementById('agr-display').textContent = 'New Draft';
+  document.getElementById('agr-timestamp').textContent = '—';
+  document.getElementById('status-panel').style.display = 'none';
+  document.getElementById('locked-msg').style.display = 'none';
+  document.getElementById('info-msg').style.display = 'none';
+  document.getElementById('add-row-btn').style.display = 'block';
+  document.getElementById('agent-results').innerHTML = '';
+  updateVerifiedBadge(false);
+  resetActionBtns();
+
+  const fields = ['client-name','client-addr','client-city','client-state','client-zip',
+                  'client-phone','client-email','start-date'];
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('client-state').value = 'OH';
+  document.getElementById('proj-mgr').value = 'Jose Martinez';
+  document.getElementById('proj-type').selectedIndex = 0;
+  document.getElementById('tax-region').selectedIndex = 0;
+  document.getElementById('custom-tax-wrap').style.display = 'none';
+
+  document.getElementById('sc-body').innerHTML = '';
+  scopeRowCount = 0;
+  Object.keys(rowChecklists).forEach(k => delete rowChecklists[k]);
+  addScopeRow(); addScopeRow(); addScopeRow();
+  calcTotals();
+
+  document.querySelectorAll('.panel input, .panel select, .panel textarea').forEach(el => el.disabled = false);
+}
+
+function resetActionBtns() {
+  document.getElementById('action-btns').innerHTML = `
+    <button class="btn btn-o" onclick="saveDraft()">Save Draft</button>
+    <button class="btn btn-w" onclick="runAgentCheck()">Run Agent Check</button>
+    <button class="btn btn-g" id="submit-btn" onclick="submitForJose()" disabled>Submit for Jose's Review</button>
+    <button class="btn btn-a" onclick="newAgreement()">+ New Agreement</button>`;
+}
+
+// ── Tax Toggle ─────────────────────────────────────────────────────────────────
+function handleTaxChange() {
+  const v = document.getElementById('tax-region').value;
+  document.getElementById('custom-tax-wrap').style.display = (v === 'custom') ? 'block' : 'none';
+  calcTotals();
+}
+
+// ── Category / Sub-Category ───────────────────────────────────────────────────
+function buildCatOptions(selectedCat) {
+  return RENO_CATS.map(c =>
+    `<option${c === selectedCat ? ' selected' : ''}>${h(c)}</option>`
+  ).join('');
+}
+
+function buildSubOptions(cat, selectedSub) {
+  const subs = (RENO[cat] || RENO[RENO_CATS[0]]).subs;
+  let opts = `<option value="">— select —</option>`;
+  opts += subs.map(s =>
+    `<option${s === selectedSub ? ' selected' : ''}>${h(s)}</option>`
+  ).join('');
+  return opts;
+}
+
+function onCatChange(rowId) {
+  const cat = document.getElementById('scat' + rowId)?.value || RENO_CATS[0];
+  const subSel = document.getElementById('ssub' + rowId);
+  if (subSel) subSel.innerHTML = buildSubOptions(cat, '');
+  document.getElementById('sdesc' + rowId).value = '';
+  rowChecklists[rowId] = { items: [], done: [] };
+  calcTotals();
+}
+
+function onSubChange(rowId) {
+  const cat = document.getElementById('scat' + rowId)?.value || RENO_CATS[0];
+  const sub = document.getElementById('ssub' + rowId)?.value || '';
+  if (sub && RENO[cat] && RENO[cat].desc[sub]) {
+    document.getElementById('sdesc' + rowId).value = RENO[cat].desc[sub];
+  }
+  // Load checklist items
+  const checks = (RENO[cat] && RENO[cat].checks && RENO[cat].checks[sub]) ? RENO[cat].checks[sub] : [];
+  rowChecklists[rowId] = { items: checks, done: [] };
+  updateChecklistBtnBadge(rowId);
+  calcTotals();
+}
+
+function updateChecklistBtnBadge(rowId) {
+  const btn = document.getElementById('chkbtn' + rowId);
+  if (!btn) return;
+  const cl = rowChecklists[rowId] || { items: [], done: [] };
+  const total = cl.items.length;
+  const done = cl.done.length;
+  if (total > 0) {
+    btn.title = `Checklist: ${done}/${total} done`;
+    btn.style.color = (done === total) ? 'var(--success)' : 'var(--warn)';
+  } else {
+    btn.title = 'No checklist for this item';
+    btn.style.color = 'var(--border)';
+  }
+}
+
+// ── Scope Rows ────────────────────────────────────────────────────────────────
+function addScopeRow(item) {
+  if (isLocked) return;
+  const id = ++scopeRowCount;
+  const cat = item ? item.category : RENO_CATS[0];
+  const sub = item ? (item.sub_category || '') : '';
+  rowChecklists[id] = item ? { items: item.checklist || [], done: item.checklist_done || [] } : { items: [], done: [] };
+
+  const tr = document.createElement('tr');
+  tr.id = 'sr' + id;
+  tr.innerHTML = `
+    <td class="lt-num">${id}</td>
+    <td><select id="scat${id}" onchange="onCatChange(${id});calcTotals()">${buildCatOptions(cat)}</select></td>
+    <td><select id="ssub${id}" onchange="onSubChange(${id})">${buildSubOptions(cat, sub)}</select></td>
+    <td><input class="ldesc" type="text" id="sdesc${id}" value="${item ? h(item.description||'') : ''}" placeholder="Work description..." oninput="calcTotals()"></td>
+    <td><input class="ldesc" type="text" id="sspec${id}" value="${item ? h(item.spec||'') : ''}" placeholder="Grade, type, finish..."></td>
+    <td><input class="ldesc" type="text" id="sdim${id}" value="${item ? h(item.dimensions||'') : ''}" placeholder="Qty, sqft..."></td>
+    <td><input type="number" min="1" step="1" value="${item ? (item.men||1) : 1}" id="smen${id}" oninput="calcTotals()" style="text-align:right;"></td>
+    <td><input type="number" min="0" step=".5" value="${item ? (item.est_hrs||'') : ''}" id="shrs${id}" placeholder="0" oninput="calcTotals()" style="text-align:right;"></td>
+    <td><input type="number" min="0" step=".01" value="${item ? (item.mat_cost||'') : ''}" id="smat${id}" placeholder="0.00" oninput="calcTotals()" style="text-align:right;"></td>
+    <td><input type="number" min="0" step=".01" value="${item ? (item.sub_cost||'') : ''}" id="ssub_cost${id}" placeholder="0.00" oninput="calcTotals()" style="text-align:right;"></td>
+    <td><input type="number" min="0" step=".01" value="${item ? (item.tools_cost||'') : ''}" id="stools${id}" placeholder="0.00" oninput="calcTotals()" style="text-align:right;"></td>
+    <td><input class="ldesc" type="text" id="svendor${id}" value="${item ? h(item.sub_contractor||'') : ''}" placeholder="Vendor name..."></td>
+    <td style="text-align:center;"><button class="chk-btn" id="chkbtn${id}" onclick="openChecklist(${id})" title="Checklist">&#128203;</button></td>
+    <td><button class="del-btn" onclick="delScopeRow(${id})">&#215;</button></td>`;
+  document.getElementById('sc-body').appendChild(tr);
+  updateChecklistBtnBadge(id);
+  renumRows();
+}
+
+function delScopeRow(id) {
+  if (isLocked) return;
+  const el = document.getElementById('sr' + id);
+  if (el) el.remove();
+  delete rowChecklists[id];
+  renumRows();
+  calcTotals();
+}
+
+function renumRows() {
+  document.querySelectorAll('#sc-body tr').forEach((tr, i) => {
+    const c = tr.querySelector('.lt-num');
+    if (c) c.textContent = i + 1;
+  });
+}
+
+function getScopeItems() {
+  const items = [];
+  let idx = 1;
+  document.querySelectorAll('#sc-body tr').forEach(tr => {
+    const id = tr.id.replace('sr', '');
+    const desc   = val('sdesc'     + id);
+    const cat    = val('scat'      + id);
+    const sub    = val('ssub'      + id);
+    const spec   = val('sspec'     + id);
+    const dim    = val('sdim'      + id);
+    const men    = pn('smen'       + id);
+    const hrs    = pn('shrs'       + id);
+    const mat    = pn('smat'       + id);
+    const sub_c  = pn('ssub_cost'  + id);
+    const tools  = pn('stools'     + id);
+    const vendor = val('svendor'   + id);
+    const cl     = rowChecklists[id] || { items: [], done: [] };
+    if (desc || mat || sub_c || tools || hrs > 0 || vendor) {
+      items.push({
+        id: idx++,
+        category: cat,
+        sub_category: sub,
+        description: desc,
+        spec,
+        dimensions: dim,
+        men,
+        est_hrs: hrs,
+        mat_cost: mat,
+        sub_cost: sub_c,
+        tools_cost: tools,
+        sub_contractor: vendor,
+        sub_contractor_signed: false,
+        notes: '',
+        checklist: cl.items,
+        checklist_done: cl.done
+      });
+    }
+  });
+  return items;
+}
+
+// ── Totals ────────────────────────────────────────────────────────────────────
+function calcTotals() {
+  let totMat = 0, totSub = 0, totTools = 0, totalManHrs = 0, totalMen = 0;
+  document.querySelectorAll('#sc-body tr').forEach(tr => {
+    const id = tr.id.replace('sr', '');
+    const men   = pn('smen'       + id);
+    const hrs   = pn('shrs'       + id);
+    const mat   = pn('smat'       + id);
+    const sub_c = pn('ssub_cost'  + id);
+    const tools = pn('stools'     + id);
+    totalMen    += men;
+    totalManHrs += men * hrs;
+    totMat      += mat;
+    totSub      += sub_c;
+    totTools    += tools;
+  });
+
+  const fmt = n => '$' + (n || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  document.getElementById('ft-men').textContent   = totalMen || '—';
+  document.getElementById('ft-hrs').textContent   = totalManHrs > 0 ? totalManHrs.toFixed(1) : '—';
+  document.getElementById('ft-mat').textContent   = fmt(totMat);
+  document.getElementById('ft-sub').textContent   = fmt(totSub);
+  document.getElementById('ft-tools').textContent = fmt(totTools);
+
+  document.getElementById('tot-manhrs').textContent = totalManHrs.toFixed(1) + ' hrs';
+  document.getElementById('tot-mat').textContent    = fmt(totMat);
+  document.getElementById('tot-sub').textContent    = fmt(totSub);
+  document.getElementById('tot-tools').textContent  = fmt(totTools);
+  document.getElementById('tot-raw').textContent    = fmt(totMat + totSub + totTools);
+
+  // Grand total: labor @ $85/hr + mat×1.24 + sub×1.30 + tools×1.15 + tax
+  const taxEl  = document.getElementById('tax-region');
+  const taxPct = taxEl.value === 'custom'
+    ? (parseFloat(document.getElementById('custom-tax')?.value) || 7.5)
+    : parseFloat(taxEl.value);
+  const labor   = totalManHrs * 85;
+  const matMkp  = totMat   * 1.24;
+  const subMkp  = totSub   * 1.30;
+  const toolMkp = totTools * 1.15;
+  const preTax  = labor + matMkp + subMkp + toolMkp;
+  const grand   = preTax * (1 + taxPct / 100);
+  document.getElementById('tot-grand').textContent = fmt(grand);
+}
+
+function calcGrandTotal(agr) {
+  let totalManHrs = 0, totMat = 0, totSub = 0, totTools = 0;
+  (agr.scope_items || []).forEach(i => {
+    totalManHrs += (i.men || 1) * (i.est_hrs || 0);
+    totMat      += i.mat_cost   || 0;
+    totSub      += i.sub_cost   || 0;
+    totTools    += i.tools_cost || 0;
+  });
+  const taxPct  = parseFloat(agr.project.tax_region) || 7.5;
+  const labor   = totalManHrs * 85;
+  const preTax  = labor + totMat * 1.24 + totSub * 1.30 + totTools * 1.15;
+  return preTax * (1 + taxPct / 100);
+}
+
+// ── Build Agreement Object ────────────────────────────────────────────────────
+function buildAgreement(status) {
+  const taxEl  = document.getElementById('tax-region');
+  const taxVal = taxEl.value === 'custom'
+    ? String(parseFloat(document.getElementById('custom-tax')?.value) || 7.5)
+    : taxEl.value;
+
+  const now    = new Date().toISOString();
+  const id     = currentAgrId || getNextAgrId();
+  currentAgrId = id;
+
+  return {
+    id,
+    created_by: 'Maria',
+    created_at: now,
+    status,
+    project: {
+      client_name:      val('client-name'),
+      client_addr:      val('client-addr'),
+      client_city:      val('client-city'),
+      client_state:     val('client-state') || 'OH',
+      client_zip:       val('client-zip'),
+      client_phone:     val('client-phone'),
+      client_email:     val('client-email'),
+      project_type:     val('proj-type'),
+      proj_mgr:         val('proj-mgr') || 'Jose Martinez',
+      start_date:       val('start-date'),
+      tax_region:       taxVal,
+      address_verified: addressVerified
+    },
+    scope_items:        getScopeItems(),
+    agent_check:        getLastAgentCheckResult(),
+    jose_notes:         '',
+    jose_approved_at:   '',
+    sent_to_client_at:  '',
+    signed_at:          '',
+    deposit_amount:     0,
+    deposit_paid_at:    '',
+    deposit_method:     '',
+    po_id:              ''
+  };
+}
+
+let lastAgentResult = null;
+function getLastAgentCheckResult() {
+  return lastAgentResult || { ran_at: '', issues: [], passed: false };
+}
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function loadAgreements() {
+  try { return JSON.parse(localStorage.getItem('nfr_agreements') || '[]'); } catch(e) { return []; }
+}
+function saveAgreements(arr) { localStorage.setItem('nfr_agreements', JSON.stringify(arr)); }
+
+function upsertAgreement(agr) {
+  const list = loadAgreements();
+  const idx  = list.findIndex(a => a.id === agr.id);
+  if (idx >= 0) list[idx] = agr; else list.push(agr);
+  saveAgreements(list);
+}
+
+function findAgreement(id) {
+  return loadAgreements().find(a => a.id === id);
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function saveDraft() {
+  if (isLocked) return;
+  const agr = buildAgreement('draft');
+  upsertAgreement(agr);
+  document.getElementById('agr-display').textContent = agr.id;
+  document.getElementById('agr-timestamp').textContent =
+    new Date(agr.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'});
+  renderHistory();
+  showToast('Draft saved — ' + agr.id);
+}
+
+function submitForJose() {
+  if (isLocked) return;
+  if (!val('client-name')) { alert('Please enter a client name before submitting.'); return; }
+  if (getScopeItems().length === 0) { alert('Please add at least one scope item before submitting.'); return; }
+  if (!agentCheckRan) { alert('Please run the Pre-Submission Check before submitting.'); return; }
+  if (!confirm('Submit ' + (currentAgrId || 'this agreement') + ' for Jose\'s review?\n\nYou will not be able to edit it after submission.')) return;
+
+  const agr = buildAgreement('pending_jose');
+  upsertAgreement(agr);
+  isLocked = true;
+
+  document.getElementById('agr-display').textContent = agr.id;
+  document.getElementById('locked-msg').style.display = 'block';
+  document.getElementById('add-row-btn').style.display = 'none';
+  document.querySelectorAll('#sc-body input, #sc-body select').forEach(el => el.disabled = true);
+  document.querySelectorAll('.panel input, .panel select').forEach(el => el.disabled = true);
+  document.getElementById('action-btns').innerHTML = `
+    <button class="btn btn-a" onclick="newAgreement()">+ New Agreement</button>
+    <span style="font-size:9pt;color:var(--success);padding:10px 0;font-weight:700;">Submitted — awaiting Jose's review</span>`;
+  renderHistory();
+  showToast('Submitted — ' + agr.id);
+}
+
+function newAgreement() {
+  if (!isLocked && val('client-name')) {
+    if (!confirm('Start a new agreement? Unsaved changes to this form will be lost.')) return;
+  }
+  initNewAgreement();
+  renderHistory();
+  window.scrollTo(0, 0);
+}
+
+// ── Load Agreement for Editing ────────────────────────────────────────────────
+function loadAgreementForEdit(agrId) {
+  const agr = findAgreement(agrId);
+  if (!agr) return;
+  if (agr.status !== 'draft') { alert('This agreement cannot be edited — status: ' + agr.status); return; }
+
+  currentAgrId     = agr.id;
+  isLocked         = false;
+  agentCheckRan    = agr.agent_check && agr.agent_check.ran_at ? true : false;
+  addressVerified  = agr.project.address_verified || false;
+  lastAgentResult  = agr.agent_check || null;
+
+  document.getElementById('agr-display').textContent = agr.id;
+  document.getElementById('agr-timestamp').textContent =
+    new Date(agr.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  document.getElementById('status-panel').style.display = 'none';
+  document.getElementById('locked-msg').style.display = 'none';
+  document.getElementById('info-msg').style.display = 'none';
+  document.getElementById('add-row-btn').style.display = 'block';
+  document.getElementById('agent-results').innerHTML = '';
+  updateVerifiedBadge(addressVerified);
+  resetActionBtns();
+
+  document.querySelectorAll('.panel input, .panel select, .panel textarea').forEach(el => el.disabled = false);
+
+  // Fill project fields
+  document.getElementById('client-name').value  = agr.project.client_name  || '';
+  document.getElementById('client-addr').value  = agr.project.client_addr  || '';
+  document.getElementById('client-city').value  = agr.project.client_city  || '';
+  document.getElementById('client-state').value = agr.project.client_state || 'OH';
+  document.getElementById('client-zip').value   = agr.project.client_zip   || '';
+  document.getElementById('client-phone').value = agr.project.client_phone || '';
+  document.getElementById('client-email').value = agr.project.client_email || '';
+  document.getElementById('proj-mgr').value     = agr.project.proj_mgr     || 'Jose Martinez';
+  document.getElementById('start-date').value   = agr.project.start_date   || '';
+
+  setSelectVal('proj-type', agr.project.project_type);
+
+  // Tax region
+  const taxVal = agr.project.tax_region;
+  if (taxVal === '7.5' || taxVal === '8.0') {
+    setSelectVal('tax-region', taxVal);
+    document.getElementById('custom-tax-wrap').style.display = 'none';
+  } else {
+    setSelectVal('tax-region', 'custom');
+    document.getElementById('custom-tax-wrap').style.display = 'block';
+    document.getElementById('custom-tax').value = taxVal;
+  }
+
+  // Rebuild scope rows
+  document.getElementById('sc-body').innerHTML = '';
+  scopeRowCount = 0;
+  Object.keys(rowChecklists).forEach(k => delete rowChecklists[k]);
+  (agr.scope_items || []).forEach(item => addScopeRow(item));
+  calcTotals();
+
+  // Enable submit if agent check previously ran
+  if (agentCheckRan) {
+    const sb = document.getElementById('submit-btn');
+    if (sb) sb.disabled = false;
+  }
+
+  window.scrollTo(0, 0);
+}
+
+// ── Agent Check ───────────────────────────────────────────────────────────────
+function toggleAgentPanel() {
+  const body = document.getElementById('agent-body');
+  const chev = document.getElementById('agent-chevron');
+  const open = body.classList.toggle('open');
+  chev.innerHTML = open ? '&#9650;' : '&#9660;';
+}
+
+function runAgentCheck() {
+  // Open the panel
+  const body = document.getElementById('agent-body');
+  if (!body.classList.contains('open')) toggleAgentPanel();
+
+  const items   = getScopeItems();
+  const projType = val('proj-type');
+  const issues  = [];   // { type: 'error'|'warn'|'pass', msg }
+
+  // 1. Missing description
+  items.forEach((item, i) => {
+    if (!item.description || !item.description.trim()) {
+      issues.push({ type: 'error', msg: `Item ${i+1}: Missing description` });
+    }
+  });
+
+  // 2. Sub cost but no vendor
+  items.forEach((item, i) => {
+    if (item.sub_cost > 0 && (!item.sub_contractor || !item.sub_contractor.trim())) {
+      issues.push({ type: 'error', msg: `Item ${i+1}: Sub cost entered but no vendor assigned` });
+    }
+  });
+
+  // 3. Kitchen with no plumbing or electrical
+  if (projType === 'Kitchen Remodel') {
+    const cats = items.map(i => i.category);
+    const hasPlumbing = cats.some(c => c.includes('Plumbing') || c.includes('Fixtures'));
+    const hasElec     = cats.some(c => c.includes('Electrical'));
+    if (!hasPlumbing) issues.push({ type: 'warn', msg: 'Kitchen Remodel: No plumbing scope found — is this correct?' });
+    if (!hasElec)     issues.push({ type: 'warn', msg: 'Kitchen Remodel: No electrical scope found — is this correct?' });
+  }
+
+  // 4. Bathroom with no plumbing or waterproofing
+  if (projType === 'Bathroom Remodel') {
+    const cats = items.map(i => i.category);
+    const hasPlumbing = cats.some(c => c.includes('Plumbing') || c.includes('Fixtures'));
+    const hasWater    = cats.some(c => c.toLowerCase().includes('waterproof'));
+    if (!hasPlumbing) issues.push({ type: 'warn', msg: 'Bathroom Remodel: No plumbing scope found — is this correct?' });
+    if (!hasWater)    issues.push({ type: 'warn', msg: 'Bathroom Remodel: No waterproofing scope found — is this correct?' });
+  }
+
+  // 5. Grand total < $500
+  let totalManHrs = 0, totMat = 0, totSub = 0, totTools = 0;
+  items.forEach(i => {
+    totalManHrs += (i.men || 1) * (i.est_hrs || 0);
+    totMat      += i.mat_cost   || 0;
+    totSub      += i.sub_cost   || 0;
+    totTools    += i.tools_cost || 0;
+  });
+  const taxPct  = parseFloat(document.getElementById('tax-region').value === 'custom'
+    ? (document.getElementById('custom-tax')?.value || 7.5)
+    : document.getElementById('tax-region').value) || 7.5;
+  const grand = (totalManHrs * 85 + totMat * 1.24 + totSub * 1.30 + totTools * 1.15) * (1 + taxPct / 100);
+
+  if (grand > 0 && grand < 500) issues.push({ type: 'error', msg: 'Total under $500 — confirm this is correct' });
+
+  // 6. Grand total > $100K
+  if (grand > 100000) issues.push({ type: 'warn', msg: 'Total over $100K — Jose must verify scope' });
+
+  // 7. Items with costs but no labor hours
+  items.forEach((item, i) => {
+    const hasCost = (item.mat_cost + item.sub_cost + item.tools_cost) > 0;
+    if (hasCost && (!item.est_hrs || item.est_hrs === 0)) {
+      issues.push({ type: 'warn', msg: `Item ${i+1}: Has costs but no labor hours — is this correct?` });
+    }
+  });
+
+  // Check: no items at all
+  if (items.length === 0) {
+    issues.push({ type: 'error', msg: 'No scope items added yet' });
+  }
+
+  // Check: no client name
+  if (!val('client-name')) {
+    issues.push({ type: 'error', msg: 'Client name is required' });
+  }
+
+  const errors = issues.filter(i => i.type === 'error');
+  const warns  = issues.filter(i => i.type === 'warn');
+  const passed = errors.length === 0;
+
+  // Render results
+  const container = document.getElementById('agent-results');
+  if (issues.length === 0) {
+    container.innerHTML = `<div class="agent-passed">All checks passed. Agreement is ready to submit.</div>`;
+  } else {
+    let html = '';
+    errors.forEach(e => {
+      html += `<div class="agent-item"><span class="agent-icon" style="color:var(--danger);">&#10007;</span><span>${h(e.msg)}</span></div>`;
+    });
+    warns.forEach(w => {
+      html += `<div class="agent-item"><span class="agent-icon" style="color:var(--warn);">&#9888;</span><span>${h(w.msg)}</span></div>`;
+    });
+    if (passed) {
+      html = `<div class="agent-passed">No errors found (${warns.length} warning${warns.length !== 1 ? 's' : ''} — review before submitting).</div>` + html;
+    }
+    container.innerHTML = html;
+  }
+
+  // Store result
+  agentCheckRan = true;
+  lastAgentResult = {
+    ran_at: new Date().toISOString(),
+    issues: issues.map(i => i.msg),
+    passed
+  };
+
+  // Enable submit button if no errors
+  const sb = document.getElementById('submit-btn');
+  if (sb) {
+    sb.disabled = false;
+    sb.title = '';
+  }
+
+  showToast(passed
+    ? 'Check passed — ready to submit'
+    : `Check complete: ${errors.length} error(s), ${warns.length} warning(s)`);
+}
+
+// ── Checklist Modal ───────────────────────────────────────────────────────────
+function openChecklist(rowId) {
+  activeChecklistRow = rowId;
+  const cat = val('scat' + rowId);
+  const sub = val('ssub' + rowId);
+  const cl  = rowChecklists[rowId] || { items: [], done: [] };
+
+  document.getElementById('chk-modal-title').textContent =
+    (sub || 'Item') + ' — Checklist';
+
+  if (cl.items.length === 0) {
+    document.getElementById('chk-items').innerHTML =
+      '<p style="font-size:9pt;color:var(--muted);font-style:italic;padding:8px 0;">No predefined checklist for this item. You can add notes in the description field.</p>';
+    document.getElementById('chk-progress').textContent = '';
+  } else {
+    const done = cl.done.length;
+    document.getElementById('chk-progress').textContent = `${done} / ${cl.items.length} complete`;
+    let html = '';
+    cl.items.forEach((item, i) => {
+      const checked = cl.done.includes(item);
+      html += `<label class="chk-item">
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleChecklistItem(${rowId}, '${h(item).replace(/'/g,"\\'")}', this.checked)">
+        <span class="chk-item-label">${h(item)}</span>
+      </label>`;
+    });
+    document.getElementById('chk-items').innerHTML = html;
+  }
+
+  document.getElementById('chk-modal').style.display = 'flex';
+}
+
+function toggleChecklistItem(rowId, item, checked) {
+  const cl = rowChecklists[rowId] || { items: [], done: [] };
+  // Decode the item back (it was h()-encoded in attribute)
+  const decoded = item.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+  if (checked) {
+    if (!cl.done.includes(decoded)) cl.done.push(decoded);
+  } else {
+    cl.done = cl.done.filter(d => d !== decoded);
+  }
+  rowChecklists[rowId] = cl;
+  // Update progress label
+  const total = cl.items.length;
+  const done  = cl.done.length;
+  document.getElementById('chk-progress').textContent = `${done} / ${total} complete`;
+  updateChecklistBtnBadge(rowId);
+}
+
+function closeChecklistModal(e) {
+  if (e && e.target !== document.getElementById('chk-modal')) return;
+  document.getElementById('chk-modal').style.display = 'none';
+  activeChecklistRow = null;
+}
+
+// ── History Table ─────────────────────────────────────────────────────────────
+function renderHistory() {
+  const list  = loadAgreements().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const empty = document.getElementById('history-empty');
+  const table = document.getElementById('hist-table');
+  const tbody = document.getElementById('hist-body');
+
+  if (list.length === 0) { empty.style.display = 'block'; table.style.display = 'none'; return; }
+  empty.style.display = 'none';
+  table.style.display = 'table';
+  tbody.innerHTML = '';
+
+  list.forEach(agr => {
+    const dt     = new Date(agr.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    const stMap  = {
+      draft:            ['st-draft',         'Draft'],
+      pending_jose:     ['st-pending_jose',   'Awaiting Jose'],
+      jose_approved:    ['st-jose_approved',  'Jose Approved'],
+      sent_to_client:   ['st-sent_to_client', 'Sent to Client'],
+      signed:           ['st-signed',         'Signed'],
+      deposit_paid:     ['st-deposit_paid',   'Deposit Paid'],
+      cancelled:        ['st-cancelled',      'Cancelled']
+    };
+    const [stClass, stText] = stMap[agr.status] || ['st-draft', agr.status];
+
+    let actionHtml = '';
+    if (agr.status === 'draft') {
+      actionHtml = `<button class="btn btn-o btn-sm" onclick="loadAgreementForEdit('${h(agr.id)}')">Edit</button>`;
+    } else if (agr.status === 'pending_jose') {
+      actionHtml = `<span style="font-size:8pt;color:var(--muted);">Awaiting Jose</span>`;
+    } else if (agr.status === 'jose_approved') {
+      actionHtml = `
+        <span style="font-size:8pt;color:var(--success);font-weight:700;margin-right:8px;">Approved</span>
+        <button class="btn btn-g btn-sm" onclick="markSigned('${h(agr.id)}')">Mark Signed</button>`;
+    } else if (agr.status === 'sent_to_client') {
+      actionHtml = `<button class="btn btn-g btn-sm" onclick="markSigned('${h(agr.id)}')">Mark Signed</button>`;
+    } else if (agr.status === 'signed') {
+      actionHtml = `<button class="btn btn-p btn-sm" onclick="markDepositPaid('${h(agr.id)}')">Mark Deposit Paid</button>`;
+    } else if (agr.status === 'deposit_paid') {
+      const poId = agr.po_id;
+      if (poId) {
+        actionHtml = `<button class="btn btn-p btn-sm" onclick="window.open('po-portal.html','_blank')">View PO (${h(poId)})</button>`;
+      } else {
+        actionHtml = `<span style="font-size:8pt;color:var(--success);font-weight:700;">Deposit Paid</span>`;
+      }
+    } else if (agr.status === 'cancelled') {
+      actionHtml = `<span style="font-size:8pt;color:var(--muted);">Cancelled</span>`;
+    }
+
+    // Show Jose's notes if they exist
+    let notesHtml = '';
+    if (agr.jose_notes) {
+      notesHtml = `<br><span style="font-size:7.5pt;color:var(--muted);font-style:italic;">${h(agr.jose_notes.substring(0,60))}${agr.jose_notes.length > 60 ? '…' : ''}</span>`;
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${h(agr.id)}</strong></td>
+      <td>${h(agr.project.client_name || '—')}${notesHtml}</td>
+      <td>${h(agr.project.project_type || '—')}</td>
+      <td>${dt}</td>
+      <td><span class="status-badge ${stClass}">${stText}</span></td>
+      <td>${actionHtml}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Mark Signed ───────────────────────────────────────────────────────────────
+function markSigned(agrId) {
+  const dateStr = prompt('Enter signature date (YYYY-MM-DD):', new Date().toISOString().substring(0,10));
+  if (!dateStr) return;
+  const agr = findAgreement(agrId);
+  if (!agr) return;
+  agr.status    = 'signed';
+  agr.signed_at = new Date(dateStr).toISOString();
+  upsertAgreement(agr);
+  renderHistory();
+  showToast(agrId + ' marked as signed.');
+}
+
+// ── Mark Deposit Paid → Auto-create PO ───────────────────────────────────────
+function markDepositPaid(agrId) {
+  const amtStr = prompt('Deposit amount received ($):');
+  if (amtStr === null) return;
+  const amt = parseFloat(amtStr) || 0;
+  const method = prompt('Payment method (check / credit card / Zelle / cash):', 'check');
+  if (method === null) return;
+
+  const agr = findAgreement(agrId);
+  if (!agr) return;
+
+  agr.status           = 'deposit_paid';
+  agr.deposit_amount   = amt;
+  agr.deposit_paid_at  = new Date().toISOString();
+  agr.deposit_method   = method;
+
+  const poId = createPOFromAgreement(agr);
+  agr.po_id  = poId;
+  upsertAgreement(agr);
+
+  renderHistory();
+  showToast('Deposit recorded. PO created: ' + poId);
+}
+
+function createPOFromAgreement(agr) {
+  const year    = new Date().getFullYear();
+  let counter   = parseInt(localStorage.getItem('nfr_po_counter') || '1000');
+  counter++;
+  localStorage.setItem('nfr_po_counter', counter);
+  const poId    = `PO-${year}-${String(counter).padStart(4, '0')}`;
+  const grand   = calcGrandTotal(agr);
+
+  const po = {
+    id:              poId,
+    agreement_id:    agr.id,
+    created_by:      'System',
+    created_at:      new Date().toISOString(),
+    status:          'new',
+    project:         Object.assign({}, agr.project),
+    scope_items:     agr.scope_items.map(i => Object.assign({}, i, { materials_ordered: false, jorge_scheduled: false })),
+    jose_notes:      agr.jose_notes || '',
+    jen_notes:       '',
+    materials_ordered_at:   '',
+    materials_notes:        '',
+    jorge_scheduled_for:    '',
+    jorge_calendar_event_id:'',
+    grand_total:            grand,
+    deposit_amount:         agr.deposit_amount,
+    progress_payment_due:   grand * 0.4,
+    final_payment_due:      grand * 0.2,
+    progress_payment_paid_at: '',
+    final_payment_paid_at:    '',
+    approved_at:  new Date().toISOString(),
+    approved_by:  'System'
+  };
+
+  const pos = JSON.parse(localStorage.getItem('nfr_pos') || '[]');
+  pos.push(po);
+  localStorage.setItem('nfr_pos', JSON.stringify(pos));
+  return poId;
+}
+
+// ── Google Maps Panel ─────────────────────────────────────────────────────────
+function initMapsPanel() {
+  const key = localStorage.getItem('nfr_gmaps_api_key');
+  if (key) {
+    document.getElementById('maps-api-key').value = key;
+    updateMapsStatus(true);
+    loadMapsScript(key);
+  }
+}
+
+function toggleMapsSettings() {
+  document.getElementById('maps-settings').classList.toggle('open');
+}
+
+function saveMapsKey() {
+  const key = document.getElementById('maps-api-key').value.trim();
+  if (!key) { alert('Please enter an API key.'); return; }
+  localStorage.setItem('nfr_gmaps_api_key', key);
+  updateMapsStatus(true);
+  loadMapsScript(key);
+  showToast('Maps API key saved.');
+}
+
+function updateMapsStatus(connected) {
+  const el = document.getElementById('maps-status');
+  if (connected) {
+    el.textContent = 'Maps Connected';
+    el.className   = 'maps-status connected';
+  } else {
+    el.textContent = 'Manual entry — add API key to enable address verify';
+    el.className   = 'maps-status';
+  }
+}
+
+function updateVerifiedBadge(verified) {
+  const badge = document.getElementById('addr-badge');
+  if (verified) {
+    badge.textContent = '\u2713 Verified';
+    badge.className   = 'addr-badge verified';
+  } else {
+    badge.textContent = '\u25CB Unverified';
+    badge.className   = 'addr-badge unverified';
+  }
+}
+
+function loadMapsScript(key) {
+  if (window._mapsLoaded) return;
+  window._mapsLoaded = true;
+  window.initAutocomplete = function() {
+    const input = document.getElementById('client-addr');
+    if (!input) return;
+    const ac = new google.maps.places.Autocomplete(input, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    });
+    ac.addListener('place_changed', function() {
+      const place = ac.getPlace();
+      const comps = place.address_components || [];
+      const get   = (type) => (comps.find(c => c.types.includes(type)) || {}).long_name  || '';
+      const getS  = (type) => (comps.find(c => c.types.includes(type)) || {}).short_name || '';
+      document.getElementById('client-addr').value  = (get('street_number') + ' ' + get('route')).trim();
+      document.getElementById('client-city').value  = get('locality');
+      document.getElementById('client-state').value = getS('administrative_area_level_1');
+      document.getElementById('client-zip').value   = get('postal_code');
+      addressVerified = true;
+      updateVerifiedBadge(true);
+    });
+  };
+  const s   = document.createElement('script');
+  s.src     = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initAutocomplete`;
+  s.async   = true;
+  s.onerror = () => { window._mapsLoaded = false; updateMapsStatus(false); };
+  document.head.appendChild(s);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+function pn(id)  { return parseFloat(document.getElementById(id)?.value) || 0; }
+function h(s)    {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function setSelectVal(id, v) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  for (let i = 0; i < el.options.length; i++) {
+    if (el.options[i].value === v || el.options[i].text === v) { el.selectedIndex = i; return; }
+  }
+}
+function showToast(msg) {
+  const t = document.getElementById('nfr-toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = '0'; }, 3200);
+}
+</script>
+</body>
+</html>

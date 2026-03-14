@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFR Operations Portal — Jen</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@300;400;700&display=swap');
+  :root {
+    --primary:#3A6B5F; --accent:#E07B54; --light:#F2F8F6;
+    --border:#A8CEBF; --muted:#6B7C76; --text:#2D2D2D;
+    --gold:#D4A054; --danger:#C0392B; --success:#27AE60; --warn:#E67E22;
+    --blue:#3498DB; --purple:#9B59B6; --dark-blue:#2C3E50;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Lato',sans-serif;font-size:10pt;color:var(--text);background:#f0f4f3;}
+  .app{max-width:1440px;margin:0 auto;padding:20px 18px;}
+
+  /* TOP BAR */
+  .top-bar{display:flex;justify-content:space-between;align-items:center;
+    background:var(--primary);color:#fff;padding:13px 22px;border-radius:8px;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .brand{font-family:'Playfair Display',serif;font-size:14pt;}
+  .brand span{font-family:'Lato',sans-serif;font-size:7.5pt;letter-spacing:2px;text-transform:uppercase;opacity:.7;display:block;margin-top:2px;}
+  .pills{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    border-radius:20px;padding:5px 14px;font-size:8.5pt;text-align:center;line-height:1.7;}
+  .pill strong{font-size:12pt;display:block;}
+  .pill span{font-size:7pt;text-transform:uppercase;letter-spacing:.5px;opacity:.8;}
+
+  /* DASHBOARD CARDS */
+  .dash-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+  .dash-card{background:#fff;border-radius:8px;padding:14px 18px;border-left:4px solid;text-align:center;}
+  .dash-card.new{border-color:var(--warn);}
+  .dash-card.materials{border-color:var(--gold);}
+  .dash-card.inprog{border-color:var(--success);}
+  .dash-card.awaiting{border-color:var(--blue);}
+  .dash-card .dc-num{font-size:28pt;font-weight:700;line-height:1;}
+  .dash-card.new .dc-num{color:var(--warn);}
+  .dash-card.materials .dc-num{color:var(--gold);}
+  .dash-card.inprog .dc-num{color:var(--success);}
+  .dash-card.awaiting .dc-num{color:var(--blue);}
+  .dash-card .dc-lbl{font-size:8pt;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+
+  /* PO CARD */
+  .po-card{background:#fff;border-radius:8px;margin-bottom:20px;border-left:5px solid;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+  .po-card.status-new{border-color:var(--warn);}
+  .po-card.status-materials_ordered{border-color:var(--gold);}
+  .po-card.status-jorge_scheduled{border-color:var(--blue);}
+  .po-card.status-in_progress{border-color:var(--success);}
+  .po-card.status-punch_list{border-color:var(--purple);}
+  .po-card.status-complete{border-color:var(--primary);}
+  .po-card.status-invoiced{border-color:var(--dark-blue);}
+
+  /* CARD HEADER */
+  .po-card-header{padding:14px 18px 10px;border-bottom:1px solid #e8f0ed;}
+  .card-hdr-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+  .card-ids{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .po-id{font-family:'Playfair Display',serif;font-size:13pt;color:var(--primary);}
+  .agr-link{font-size:8pt;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:2px 8px;border-radius:10px;}
+  .agr-link:hover{background:var(--light);color:var(--primary);}
+  .status-badge{display:inline-block;padding:4px 11px;border-radius:12px;font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+  .sb-new{background:#fff3e0;color:var(--warn);}
+  .sb-materials_ordered{background:#fef9e7;color:#a07000;}
+  .sb-jorge_scheduled{background:#ebf5fb;color:#1a6fa1;}
+  .sb-in_progress{background:#eafaf1;color:#1a7a45;}
+  .sb-punch_list{background:#f5eef8;color:#6c3483;}
+  .sb-complete{background:#eaf4f2;color:var(--primary);}
+  .sb-invoiced{background:#eaecee;color:#1c2833;}
+  .sb-paid{background:#f0f0f0;color:var(--muted);}
+
+  .card-info-row{display:flex;gap:20px;flex-wrap:wrap;font-size:9pt;color:var(--muted);}
+  .card-info-row strong{color:var(--text);}
+  .card-payment-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;background:var(--light);border-radius:5px;padding:8px 12px;}
+  .pay-item{display:flex;flex-direction:column;gap:2px;}
+  .pay-item .pay-lbl{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
+  .pay-item .pay-amt{font-size:10pt;font-weight:700;color:var(--primary);}
+  .pay-item .pay-rcvd{font-size:7.5pt;color:var(--success);}
+
+  /* CARD SECTION */
+  .card-body{padding:14px 18px;}
+  .section{margin-bottom:16px;}
+  .section-title{font-family:'Playfair Display',serif;font-size:10pt;color:var(--primary);
+    border-bottom:2px solid var(--border);padding-bottom:6px;margin-bottom:10px;}
+
+  /* SCOPE TABLE */
+  .tbl-wrap{overflow-x:auto;}
+  table.sc{width:100%;border-collapse:collapse;font-size:8pt;min-width:800px;}
+  table.sc thead th{background:var(--primary);color:#fff;padding:7px 6px;text-align:left;
+    font-size:7pt;font-weight:700;letter-spacing:.3px;white-space:nowrap;}
+  table.sc thead th.c{text-align:center;}
+  table.sc tbody td{border-bottom:1px solid #e5ede9;padding:6px 6px;vertical-align:middle;font-size:8pt;}
+  table.sc tbody tr:nth-child(even) td{background:#fafcfb;}
+  table.sc tbody tr:hover td{background:#f0f8f5;}
+  table.sc td.lt-num{text-align:center;color:var(--muted);width:28px;font-size:7.5pt;}
+  table.sc td.c{text-align:center;}
+  .sub-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:7pt;font-weight:700;}
+  .sub-signed{background:#d4edda;color:#155724;}
+  .sub-unsigned{background:#fff3cd;color:#856404;}
+  .chk-btn{background:var(--light);border:1px solid var(--border);color:var(--primary);
+    cursor:pointer;font-size:8pt;padding:3px 8px;border-radius:4px;white-space:nowrap;}
+  .chk-btn:hover{background:var(--border);}
+  .mat-check{width:16px;height:16px;cursor:pointer;accent-color:var(--success);}
+
+  /* PANELS */
+  .sub-panel{background:var(--light);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:12px;}
+  .sub-panel-title{font-size:8pt;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;}
+  .f{margin-bottom:9px;}
+  .f label{display:block;font-size:7.5pt;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+  .f input,.f select,.f textarea{width:100%;border:1px solid var(--border);border-radius:4px;
+    padding:6px 9px;font-family:'Lato',sans-serif;font-size:9pt;color:var(--text);background:#fff;outline:none;}
+  .f input:focus,.f select:focus,.f textarea:focus{border-color:var(--primary);}
+  .f textarea{resize:vertical;min-height:60px;}
+  .row2{display:flex;gap:8px;}.row2 .f{flex:1;}
+
+  .btn{border:none;border-radius:4px;padding:7px 16px;font-family:'Lato',sans-serif;
+    font-size:9pt;font-weight:700;cursor:pointer;transition:opacity .15s;}
+  .btn:hover{opacity:.85;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-warn{background:var(--warn);color:#fff;}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-blue{background:var(--blue);color:#fff;}
+  .btn-success{background:var(--success);color:#fff;}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-muted{background:#ddd;color:var(--text);}
+  .btn-sm{padding:4px 10px;font-size:8pt;}
+
+  .jorge-note{background:#e8f4fd;border:1px solid #a8d6f0;border-radius:5px;
+    padding:8px 12px;font-size:8.5pt;color:#1a6fa1;margin-top:8px;}
+
+  /* PAYMENT TRACKING */
+  .pay-track-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#fff;border:1px solid var(--border);border-radius:5px;padding:9px 12px;margin-bottom:8px;}
+  .pay-track-lbl{flex:1;min-width:160px;}
+  .pay-track-lbl strong{display:block;font-size:9.5pt;color:var(--primary);}
+  .pay-track-lbl span{font-size:7.5pt;color:var(--muted);}
+  .pay-track-row input[type="date"]{border:1px solid var(--border);border-radius:4px;
+    padding:5px 8px;font-family:'Lato',sans-serif;font-size:9pt;color:var(--text);background:#fff;outline:none;}
+  .pay-check{color:var(--success);font-size:16pt;line-height:1;}
+
+  /* STATUS ACTION BAR */
+  .action-bar{background:#f8faf9;border-top:1px solid var(--border);padding:12px 18px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .action-bar .notes-wrap{flex:1;min-width:200px;}
+  .action-bar textarea{width:100%;border:1px solid var(--border);border-radius:4px;
+    padding:6px 9px;font-family:'Lato',sans-serif;font-size:9pt;color:var(--text);
+    background:#fff;outline:none;resize:vertical;min-height:40px;}
+  .action-bar textarea:focus{border-color:var(--primary);}
+  .notes-lbl{font-size:7.5pt;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+
+  /* COMPLETED SECTION */
+  .completed-section{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-top:8px;}
+  .completed-toggle{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+  .completed-toggle h3{font-family:'Playfair Display',serif;font-size:10pt;color:var(--muted);}
+  .completed-toggle .toggle-icon{font-size:12pt;color:var(--muted);}
+  .completed-body{margin-top:12px;display:none;}
+  .completed-body.open{display:block;}
+  table.paid-tbl{width:100%;border-collapse:collapse;font-size:8.5pt;}
+  table.paid-tbl thead th{background:var(--light);color:var(--muted);padding:6px 8px;text-align:left;
+    font-size:7.5pt;font-weight:700;letter-spacing:.3px;border-bottom:2px solid var(--border);}
+  table.paid-tbl tbody td{padding:7px 8px;border-bottom:1px solid #eee;color:var(--text);}
+  table.paid-tbl tbody tr:hover td{background:#f9faf9;}
+
+  /* EMPTY STATE */
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-state h2{font-family:'Playfair Display',serif;font-size:16pt;color:var(--primary);margin-bottom:10px;}
+  .empty-state p{font-size:10pt;margin-bottom:16px;line-height:1.7;}
+  .empty-state a{color:var(--accent);font-weight:700;}
+
+  /* MODAL */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal-bg.hidden{display:none;}
+  .modal{background:#fff;border-radius:10px;padding:22px 24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;position:relative;}
+  .modal h3{font-family:'Playfair Display',serif;font-size:12pt;color:var(--primary);margin-bottom:4px;}
+  .modal .modal-sub{font-size:8pt;color:var(--muted);margin-bottom:14px;}
+  .modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:16pt;cursor:pointer;color:var(--muted);line-height:1;}
+  .modal-close:hover{color:var(--danger);}
+  .chk-progress{font-size:8.5pt;color:var(--muted);margin-bottom:10px;}
+  .chk-progress strong{color:var(--primary);}
+  .chk-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:9pt;}
+  .chk-item:last-child{border-bottom:none;}
+  .chk-item input[type="checkbox"]{width:15px;height:15px;accent-color:var(--success);cursor:pointer;flex-shrink:0;}
+  .chk-item.done{color:var(--muted);text-decoration:line-through;}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:20px;right:20px;background:var(--primary);color:#fff;
+    padding:10px 20px;border-radius:6px;font-size:9pt;font-weight:700;
+    z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+  #toast.show{opacity:1;}
+
+  @media(max-width:900px){
+    .dash-cards{grid-template-columns:repeat(2,1fr);}
+    .pills{gap:5px;}
+  }
+  @media(max-width:600px){
+    .dash-cards{grid-template-columns:1fr 1fr;}
+    .card-info-row{gap:10px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="brand">
+      Natures Friend &amp; Resources
+      <span>Operations Portal &mdash; Jen</span>
+    </div>
+    <div class="pills" id="summary-pills">
+      <div class="pill"><strong id="pill-active">0</strong><span>Active Jobs</span></div>
+      <div class="pill"><strong id="pill-materials">0</strong><span>Materials Pending</span></div>
+      <div class="pill"><strong id="pill-jorge">0</strong><span>Jorge Scheduled</span></div>
+      <div class="pill"><strong id="pill-payments">0</strong><span>Payments Due</span></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD CARDS -->
+  <div class="dash-cards">
+    <div class="dash-card new"><div class="dc-num" id="dc-new">0</div><div class="dc-lbl">New POs</div></div>
+    <div class="dash-card materials"><div class="dc-num" id="dc-materials">0</div><div class="dc-lbl">Materials Ordering</div></div>
+    <div class="dash-card inprog"><div class="dc-num" id="dc-inprog">0</div><div class="dc-lbl">In Progress</div></div>
+    <div class="dash-card awaiting"><div class="dc-num" id="dc-awaiting">0</div><div class="dc-lbl">Awaiting Payment</div></div>
+  </div>
+
+  <!-- PO LIST -->
+  <div id="po-list"></div>
+
+  <!-- COMPLETED SECTION -->
+  <div class="completed-section" id="completed-section" style="display:none;">
+    <div class="completed-toggle" onclick="toggleCompleted()">
+      <h3>Completed &amp; Paid Jobs (<span id="paid-count">0</span>)</h3>
+      <span class="toggle-icon" id="toggle-icon">&#9660;</span>
+    </div>
+    <div class="completed-body" id="completed-body">
+      <table class="paid-tbl">
+        <thead><tr>
+          <th>PO #</th><th>Client</th><th>Project Type</th><th>Total</th><th>Completed</th><th>Action</th>
+        </tr></thead>
+        <tbody id="paid-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- CHECKLIST MODAL -->
+<div class="modal-bg hidden" id="chk-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h3 id="modal-title">Checklist</h3>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="chk-progress" id="chk-progress"></div>
+    <div id="modal-chk-list"></div>
+  </div>
+</div>
+
+<!-- VIEW MODAL (paid PO detail) -->
+<div class="modal-bg hidden" id="view-modal">
+  <div class="modal" style="max-width:600px;">
+    <button class="modal-close" onclick="closeViewModal()">&times;</button>
+    <h3 id="view-modal-title">PO Detail</h3>
+    <div id="view-modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + (parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtDate = s => s ? new Date(s+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function loadPOs(){
+  try{ return JSON.parse(localStorage.getItem('nfr_pos')||'[]'); }catch(e){ return []; }
+}
+function savePOs(pos){
+  localStorage.setItem('nfr_pos', JSON.stringify(pos));
+}
+function getPO(id){ return loadPOs().find(p=>p.id===id); }
+function updatePO(id, fn){
+  const pos=loadPOs();
+  const idx=pos.findIndex(p=>p.id===id);
+  if(idx===-1) return;
+  fn(pos[idx]);
+  savePOs(pos);
+}
+
+const STATUS_ORDER=['new','materials_ordered','jorge_scheduled','in_progress','punch_list','complete','invoiced','paid'];
+const STATUS_LABELS={
+  new:'New',materials_ordered:'Materials Ordering',jorge_scheduled:'Jorge Scheduled',
+  in_progress:'In Progress',punch_list:'Punch List',complete:'Complete',invoiced:'Invoiced',paid:'Paid'
+};
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function render(){
+  const all=loadPOs();
+
+  // Pills + dashboard counts
+  const active = all.filter(p=>!['paid','cancelled'].includes(p.status));
+  const matPending = all.filter(p=>{
+    if(['paid','cancelled','complete','invoiced'].includes(p.status)) return false;
+    return (p.scope_items||[]).some(s=>!s.materials_ordered);
+  });
+  const jorgeCount = all.filter(p=>p.jorge_scheduled_for&&!['paid','cancelled'].includes(p.status)).length;
+  const payDue = all.filter(p=>{
+    if(['paid','cancelled'].includes(p.status)) return false;
+    const needProgress = (p.progress_payment_due||0)>0 && !p.progress_payment_paid_at;
+    const needFinal = (p.final_payment_due||0)>0 && !p.final_payment_paid_at;
+    return needProgress || needFinal;
+  });
+
+  $('pill-active').textContent = active.length;
+  $('pill-materials').textContent = matPending.length;
+  $('pill-jorge').textContent = jorgeCount;
+  $('pill-payments').textContent = payDue.length;
+
+  $('dc-new').textContent = all.filter(p=>p.status==='new').length;
+  $('dc-materials').textContent = all.filter(p=>p.status==='materials_ordered').length;
+  $('dc-inprog').textContent = all.filter(p=>['in_progress','jorge_scheduled'].includes(p.status)).length;
+  $('dc-awaiting').textContent = all.filter(p=>['complete','invoiced'].includes(p.status)).length;
+
+  // Sort active
+  const activeSorted = active.slice().sort((a,b)=>{
+    const ai=STATUS_ORDER.indexOf(a.status), bi=STATUS_ORDER.indexOf(b.status);
+    if(ai!==bi) return ai-bi;
+    const da=a.project?.start_date||'9999', db=b.project?.start_date||'9999';
+    return da.localeCompare(db);
+  });
+
+  const listEl=$('po-list');
+  if(activeSorted.length===0){
+    listEl.innerHTML=`<div class="empty-state">
+      <h2>No Active POs</h2>
+      <p>POs are auto-generated from the Agreement Portal when a client signs and pays their deposit.</p>
+      <p><a href="agreement-portal.html">Go to Agreement Portal &rarr;</a></p>
+    </div>`;
+  } else {
+    listEl.innerHTML = activeSorted.map(po=>renderPOCard(po)).join('');
+  }
+
+  // Paid
+  const paid=all.filter(p=>p.status==='paid');
+  $('paid-count').textContent=paid.length;
+  if(paid.length>0){
+    $('completed-section').style.display='';
+    const tbody=$('paid-tbody');
+    tbody.innerHTML=paid.map(p=>`
+      <tr>
+        <td>${p.id}</td>
+        <td>${p.project?.client_name||''}</td>
+        <td>${p.project?.project_type||''}</td>
+        <td>${fmt(p.grand_total)}</td>
+        <td>${fmtDate(p.final_payment_paid_at||p.approved_at||'')}</td>
+        <td><button class="btn btn-muted btn-sm" onclick="viewPaid('${p.id}')">View</button></td>
+      </tr>
+    `).join('');
+  } else {
+    $('completed-section').style.display='none';
+  }
+}
+
+function renderPOCard(po){
+  const proj = po.project||{};
+  const deposit = po.deposit_amount||0;
+  const grand = po.grand_total||0;
+  const progress = po.progress_payment_due||(grand*0.40);
+  const final = po.final_payment_due||(grand*0.20);
+  const scope = po.scope_items||[];
+
+  // payment display
+  const depositLine = deposit>0
+    ? `<div class="pay-item"><div class="pay-lbl">Deposit Received</div><div class="pay-amt" style="color:var(--success)">${fmtDate(po.approved_at)}</div></div>`
+    : '';
+  const progRcvd = po.progress_payment_paid_at
+    ? `<div class="pay-rcvd">&#10003; Received ${fmtDate(po.progress_payment_paid_at)}</div>` : '';
+  const finalRcvd = po.final_payment_paid_at
+    ? `<div class="pay-rcvd">&#10003; Received ${fmtDate(po.final_payment_paid_at)}</div>` : '';
+
+  // scope table rows
+  const scopeRows = scope.map((item,i)=>{
+    const subName = item.sub_contractor||'';
+    let subBadge='';
+    if(subName){
+      if(item.sub_contractor_signed){
+        subBadge=`<br><span class="sub-badge sub-signed">Signed &#10003;</span>`;
+      } else {
+        subBadge=`<br><span class="sub-badge sub-unsigned">&#9888; Get Buyout</span>`;
+      }
+    }
+    const chkTotal=(item.checklist||[]).length;
+    const chkDone=(item.checklist_done||[]).length;
+    const chkLbl=chkTotal>0?`${chkDone}/${chkTotal}`:'&mdash;';
+    const chkBtn=chkTotal>0
+      ?`<button class="chk-btn" onclick="openChecklist('${po.id}',${item.id})">&#128203; ${chkLbl}</button>`
+      :`<span style="color:var(--muted);font-size:7.5pt;">&mdash;</span>`;
+    return `<tr>
+      <td class="lt-num">${i+1}</td>
+      <td>${item.category||''}</td>
+      <td>${item.sub_category||''}</td>
+      <td>${item.description||''}</td>
+      <td style="max-width:160px;word-break:break-word;">${item.spec||''}</td>
+      <td>${item.dimensions||''}</td>
+      <td>${subName}${subBadge}</td>
+      <td class="c"><input type="checkbox" class="mat-check" ${item.materials_ordered?'checked':''} onchange="toggleMatOrdered('${po.id}',${item.id},this.checked)"></td>
+      <td class="c">${chkBtn}</td>
+    </tr>`;
+  }).join('');
+
+  // Materials panel
+  const matPanel=`<div class="sub-panel">
+    <div class="sub-panel-title">&#128230; Materials &amp; Ordering</div>
+    <div class="row2">
+      <div class="f"><label>Materials Notes / Order Details</label>
+        <textarea rows="2" placeholder="Supplier names, order numbers, delivery notes..." onchange="saveField('${po.id}','jen_notes',this.value)" oninput="autoSaveField('${po.id}','jen_notes',this.value)">${po.jen_notes||''}</textarea></div>
+      <div class="f"><label>Materials Ordered Date</label>
+        <input type="date" value="${po.materials_ordered_at||''}" onchange="saveField('${po.id}','materials_ordered_at',this.value)"></div>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="markAllMaterials('${po.id}')">&#10003; Mark All Materials Ordered</button>
+  </div>`;
+
+  // Jorge panel
+  const jorgePanel=`<div class="sub-panel">
+    <div class="sub-panel-title">&#128197; Jorge&#39;s Schedule</div>
+    <div class="row2">
+      <div class="f"><label>Schedule Jorge For</label>
+        <input type="date" value="${po.jorge_scheduled_for||''}" onchange="saveJorge('${po.id}','jorge_scheduled_for',this.value)"></div>
+      <div class="f"><label>Calendar Note</label>
+        <input type="text" placeholder="Job description for calendar event..." value="${po.jorge_calendar_event_id||''}" onchange="saveField('${po.id}','jorge_calendar_event_id',this.value)"></div>
+    </div>
+    <button class="btn btn-blue btn-sm" onclick="lockJorge('${po.id}')">&#128274; Lock Jorge&#39;s Schedule</button>
+    ${po.jorge_scheduled_for?`<div class="jorge-note">&#128197; Reminder: Add to Google Calendar &mdash; <strong>/jorge-calendar</strong> skill &nbsp;|&nbsp; Scheduled: <strong>${fmtDate(po.jorge_scheduled_for)}</strong></div>`:''}
+  </div>`;
+
+  // Payment tracking
+  const payPanel=`<div class="sub-panel">
+    <div class="sub-panel-title">&#128181; Payment Tracking</div>
+    <div class="pay-track-row">
+      <div class="pay-track-lbl">
+        <strong>Progress Payment (40%) &mdash; ${fmt(progress)}</strong>
+        <span>Due at midpoint of job</span>
+      </div>
+      ${po.progress_payment_paid_at
+        ?`<span class="pay-check">&#10003;</span><span style="font-size:8.5pt;color:var(--success);">Received ${fmtDate(po.progress_payment_paid_at)}</span>`
+        :`<input type="date" id="prog-date-${po.id}" value="">
+         <button class="btn btn-success btn-sm" onclick="markPayment('${po.id}','progress')">Mark Received</button>`
+      }
+    </div>
+    <div class="pay-track-row">
+      <div class="pay-track-lbl">
+        <strong>Final Payment (20%) &mdash; ${fmt(final)}</strong>
+        <span>Due on completion</span>
+      </div>
+      ${po.final_payment_paid_at
+        ?`<span class="pay-check">&#10003;</span><span style="font-size:8.5pt;color:var(--success);">Received ${fmtDate(po.final_payment_paid_at)}</span>`
+        :`<input type="date" id="final-date-${po.id}" value="">
+         <button class="btn btn-success btn-sm" onclick="markPayment('${po.id}','final')">Mark Received</button>`
+      }
+    </div>
+  </div>`;
+
+  // Status action button
+  const actionBtn = getActionBtn(po);
+
+  return `<div class="po-card status-${po.status}" id="card-${po.id}">
+    <div class="po-card-header">
+      <div class="card-hdr-top">
+        <div class="card-ids">
+          <span class="po-id">${po.id}</span>
+          ${po.agreement_id?`<a class="agr-link" href="agreement-portal.html">${po.agreement_id}</a>`:''}
+          <span class="status-badge sb-${po.status}">${STATUS_LABELS[po.status]||po.status}</span>
+        </div>
+      </div>
+      <div class="card-info-row">
+        <span><strong>${proj.client_name||'—'}</strong></span>
+        <span>${[proj.client_addr,proj.client_city,proj.client_state,proj.client_zip].filter(Boolean).join(', ')||'No address'}</span>
+        <span>Type: <strong>${proj.project_type||'—'}</strong></span>
+        <span>Start: <strong>${fmtDate(proj.start_date)||'TBD'}</strong></span>
+        <span>PM: <strong>${proj.proj_mgr||'Jose Martinez'}</strong></span>
+      </div>
+      <div class="card-payment-row">
+        <div class="pay-item"><div class="pay-lbl">Grand Total</div><div class="pay-amt">${fmt(grand)}</div></div>
+        <div class="pay-item"><div class="pay-lbl">40% Deposit</div><div class="pay-amt">${fmt(grand*0.40)}</div></div>
+        <div class="pay-item"><div class="pay-lbl">40% Progress</div><div class="pay-amt">${fmt(progress)}</div></div>
+        <div class="pay-item"><div class="pay-lbl">20% Final</div><div class="pay-amt">${fmt(final)}</div></div>
+        ${depositLine}
+      </div>
+    </div>
+
+    <div class="card-body">
+      ${po.jose_notes?`<div style="background:#fff8f0;border:1px solid #f0d5b0;border-radius:5px;padding:8px 12px;font-size:8.5pt;margin-bottom:12px;"><strong style="color:var(--warn);">&#128204; Jose&#39;s Note:</strong> ${po.jose_notes}</div>`:''}
+
+      <div class="section">
+        <div class="section-title">Scope of Work</div>
+        <div class="tbl-wrap">
+          <table class="sc">
+            <thead><tr>
+              <th style="width:28px;">#</th>
+              <th>Category</th>
+              <th>Sub-Category</th>
+              <th>Description</th>
+              <th>Spec</th>
+              <th>Dimensions</th>
+              <th>Sub-Contractor</th>
+              <th class="c">Materials &#10003;</th>
+              <th class="c">Checklist</th>
+            </tr></thead>
+            <tbody>${scopeRows||'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:12px;">No scope items</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+
+      ${matPanel}
+      ${jorgePanel}
+      ${payPanel}
+    </div>
+
+    <div class="action-bar">
+      <div class="notes-wrap">
+        <div class="notes-lbl">Notes for Jose</div>
+        <textarea placeholder="Add notes for Jose..." onchange="saveField('${po.id}','jen_notes',this.value)" oninput="autoSaveField('${po.id}','jen_notes',this.value)">${po.jen_notes||''}</textarea>
+      </div>
+      ${actionBtn}
+    </div>
+  </div>`;
+}
+
+function getActionBtn(po){
+  const s=po.status;
+  const btns={
+    new:`<button class="btn btn-warn" onclick="advanceStatus('${po.id}','materials_ordered','Start Material Order?')">&#128230; Start Material Order</button>`,
+    materials_ordered:`<button class="btn btn-gold" onclick="advanceStatus('${po.id}','jorge_scheduled','Confirm Jorge is scheduled?')">&#128197; Confirm Jorge Scheduled</button>`,
+    jorge_scheduled:`<button class="btn btn-blue" onclick="advanceStatus('${po.id}','in_progress','Mark work as started?')">&#9881; Mark Work Started</button>`,
+    in_progress:`<button class="btn btn-primary" onclick="advanceStatus('${po.id}','punch_list','Submit punch list and move to final walkthrough?')">&#128203; Submit Punch List</button>`,
+    punch_list:`<button class="btn btn-success" onclick="advanceStatus('${po.id}','complete','Mark job complete?')">&#10003; Mark Complete</button>`,
+    complete:`<button class="btn btn-accent" onclick="advanceStatus('${po.id}','invoiced','Mark as invoiced? (No email is sent)')">&#128196; Send Invoice</button>`,
+    invoiced:`<button class="btn btn-success" onclick="advanceStatus('${po.id}','paid','Mark job PAID and close out?')">&#10003; Mark Paid &mdash; Job Done</button>`,
+  };
+  return btns[s]||'';
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+
+function toggleMatOrdered(poId, itemId, val){
+  updatePO(poId, po=>{
+    const item=(po.scope_items||[]).find(s=>s.id===itemId);
+    if(item) item.materials_ordered=val;
+  });
+  toast(val?'Material marked ordered':'Material unmarked');
+  render();
+}
+
+function saveField(poId, field, val){
+  updatePO(poId, po=>{ po[field]=val; });
+}
+
+// Debounce map for auto-save
+const _debounce={};
+function autoSaveField(poId, field, val){
+  const key=poId+field;
+  clearTimeout(_debounce[key]);
+  _debounce[key]=setTimeout(()=>{ updatePO(poId,po=>{po[field]=val;}); },600);
+}
+
+function saveJorge(poId, field, val){
+  updatePO(poId, po=>{ po[field]=val; });
+}
+
+function markAllMaterials(poId){
+  if(!confirm('Mark ALL scope items as materials ordered?')) return;
+  updatePO(poId, po=>{
+    (po.scope_items||[]).forEach(s=>s.materials_ordered=true);
+    if(!po.materials_ordered_at) po.materials_ordered_at=new Date().toISOString().split('T')[0];
+    if(po.status==='new') po.status='materials_ordered';
+  });
+  toast('All materials marked ordered');
+  render();
+}
+
+function lockJorge(poId){
+  const po=getPO(poId);
+  if(!po) return;
+  if(!po.jorge_scheduled_for){ toast('Set a date first'); return; }
+  if(!confirm(`Lock Jorge for ${fmtDate(po.jorge_scheduled_for)}?`)) return;
+  updatePO(poId, p=>{
+    if(['new','materials_ordered'].includes(p.status)) p.status='jorge_scheduled';
+  });
+  toast('Jorge scheduled — remember to add to Google Calendar');
+  render();
+}
+
+function markPayment(poId, type){
+  const dateEl=$(type==='progress'?`prog-date-${poId}`:`final-date-${poId}`);
+  const dateVal = dateEl?dateEl.value:'';
+  const dateToSave = dateVal || new Date().toISOString().split('T')[0];
+  if(!confirm(`Mark ${type} payment received on ${fmtDate(dateToSave)}?`)) return;
+  updatePO(poId, po=>{
+    if(type==='progress') po.progress_payment_paid_at=dateToSave;
+    else po.final_payment_paid_at=dateToSave;
+  });
+  toast('Payment recorded');
+  render();
+}
+
+function advanceStatus(poId, newStatus, confirmMsg){
+  if(!confirm(confirmMsg)) return;
+  updatePO(poId, po=>{ po.status=newStatus; });
+  toast(`Status updated: ${STATUS_LABELS[newStatus]}`);
+  render();
+}
+
+// ── CHECKLIST MODAL ───────────────────────────────────────────────────────────
+
+let _chkPOId=null, _chkItemId=null;
+
+function openChecklist(poId, itemId){
+  const po=getPO(poId);
+  if(!po) return;
+  const item=(po.scope_items||[]).find(s=>s.id===itemId);
+  if(!item) return;
+  _chkPOId=poId; _chkItemId=itemId;
+  const checklist=item.checklist||[];
+  const done=item.checklist_done||[];
+  $('modal-title').textContent=`Checklist: ${item.description||'Item '+itemId}`;
+  $('modal-sub').textContent=`${item.category||''} ${item.sub_category?'/ '+item.sub_category:''}`;
+  $('chk-progress').innerHTML=`<strong>${done.length}/${checklist.length}</strong> tasks completed`;
+  const listEl=$('modal-chk-list');
+  if(checklist.length===0){
+    listEl.innerHTML='<p style="color:var(--muted);font-size:9pt;text-align:center;padding:10px 0;">No checklist items defined.</p>';
+  } else {
+    listEl.innerHTML=checklist.map((c,i)=>{
+      const isDone=done.includes(c)||(typeof done[i]==='string'?done.includes(c):done.indexOf(c)!==-1);
+      return `<div class="chk-item ${isDone?'done':''}" id="chk-row-${i}">
+        <input type="checkbox" ${isDone?'checked':''} onchange="toggleChk(${i},this.checked,'${encodeURIComponent(c)}')">
+        <span>${c}</span>
+      </div>`;
+    }).join('');
+  }
+  $('chk-modal').classList.remove('hidden');
+}
+
+function toggleChk(idx, checked, encodedText){
+  const text=decodeURIComponent(encodedText);
+  updatePO(_chkPOId, po=>{
+    const item=(po.scope_items||[]).find(s=>s.id===_chkItemId);
+    if(!item) return;
+    if(!item.checklist_done) item.checklist_done=[];
+    if(checked){ if(!item.checklist_done.includes(text)) item.checklist_done.push(text); }
+    else { item.checklist_done=item.checklist_done.filter(x=>x!==text); }
+  });
+  // Update modal progress
+  const po=getPO(_chkPOId);
+  const item=po?(po.scope_items||[]).find(s=>s.id===_chkItemId):null;
+  if(item){
+    const total=(item.checklist||[]).length;
+    const done=(item.checklist_done||[]).length;
+    $('chk-progress').innerHTML=`<strong>${done}/${total}</strong> tasks completed`;
+    const row=$(`chk-row-${idx}`);
+    if(row){ if(checked) row.classList.add('done'); else row.classList.remove('done'); }
+  }
+}
+
+function closeModal(){
+  $('chk-modal').classList.add('hidden');
+  _chkPOId=null; _chkItemId=null;
+  render();
+}
+
+// ── VIEW PAID MODAL ───────────────────────────────────────────────────────────
+
+function viewPaid(poId){
+  const po=getPO(poId);
+  if(!po) return;
+  const proj=po.project||{};
+  $('view-modal-title').textContent=po.id+' — '+STATUS_LABELS[po.status];
+  $('view-modal-body').innerHTML=`
+    <div style="font-size:9pt;line-height:1.9;color:var(--text);">
+      <div><strong>Client:</strong> ${proj.client_name||'—'}</div>
+      <div><strong>Address:</strong> ${[proj.client_addr,proj.client_city,proj.client_state].filter(Boolean).join(', ')||'—'}</div>
+      <div><strong>Project Type:</strong> ${proj.project_type||'—'}</div>
+      <div><strong>Start Date:</strong> ${fmtDate(proj.start_date)||'—'}</div>
+      <div><strong>Total:</strong> ${fmt(po.grand_total)}</div>
+      <div><strong>Progress Paid:</strong> ${po.progress_payment_paid_at?fmtDate(po.progress_payment_paid_at):'—'}</div>
+      <div><strong>Final Paid:</strong> ${po.final_payment_paid_at?fmtDate(po.final_payment_paid_at):'—'}</div>
+      ${po.jen_notes?`<div style="margin-top:8px;"><strong>Notes:</strong> ${po.jen_notes}</div>`:''}
+    </div>
+  `;
+  $('view-modal').classList.remove('hidden');
+}
+
+function closeViewModal(){
+  $('view-modal').classList.add('hidden');
+}
+
+// ── COMPLETED TOGGLE ──────────────────────────────────────────────────────────
+
+function toggleCompleted(){
+  const body=$('completed-body');
+  const icon=$('toggle-icon');
+  if(body.classList.contains('open')){
+    body.classList.remove('open');
+    icon.innerHTML='&#9660;';
+  } else {
+    body.classList.add('open');
+    icon.innerHTML='&#9650;';
+  }
+}
+
+// ── CLOSE MODAL ON BG CLICK ───────────────────────────────────────────────────
+
+$('chk-modal').addEventListener('click',e=>{ if(e.target===$('chk-modal')) closeModal(); });
+$('view-modal').addEventListener('click',e=>{ if(e.target===$('view-modal')) closeViewModal(); });
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+render();
+
+// Re-render on storage changes from other tabs
+window.addEventListener('storage', e=>{ if(e.key==='nfr_pos') render(); });
+</script>
+</body>
+</html>

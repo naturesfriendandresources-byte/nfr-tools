@@ -137,30 +137,51 @@ function scopeLine(item) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const poId = qp('po');
-  const root = document.getElementById('contract-root');
+  // Support both ?agr=AGR-2026-1001 (new flow) and ?po=PO-2026-1001 (legacy)
+  const agrId = qp('agr');
+  const poId  = qp('po');
+  const root  = document.getElementById('contract-root');
 
-  if (!poId) {
-    root.innerHTML = '<div class="error-box">No PO ID in URL.<br><small>Use contract.html?po=PO-2026-1001</small></div>';
+  if (!agrId && !poId) {
+    root.innerHTML = '<div class="error-box">No ID in URL.<br><small>Use contract.html?agr=AGR-2026-1001 or contract.html?po=PO-2026-1001</small></div>';
     return;
   }
 
-  const pos = loadPOs();
-  const po  = pos.find(p => p.id === poId);
+  let record = null;
+  let recordId = '';
 
-  if (!po) {
-    root.innerHTML = `<div class="error-box">PO <strong>${h(poId)}</strong> not found in this browser's storage.<br><small>Open this page in the same Chrome/Edge window where the PO was created.</small></div>`;
-    return;
+  if (agrId) {
+    const agrs = JSON.parse(localStorage.getItem('nfr_agreements') || '[]');
+    record = agrs.find(a => a.id === agrId);
+    recordId = agrId;
+    if (!record) {
+      root.innerHTML = `<div class="error-box">Agreement <strong>${h(agrId)}</strong> not found in this browser's storage.</div>`;
+      return;
+    }
+    if (!['jose_approved','sent_to_client','signed','deposit_paid'].includes(record.status)) {
+      root.innerHTML = `<div class="error-box warn">Agreement <strong>${h(agrId)}</strong> has not been approved yet.<br><small>Status: ${h(record.status)}</small></div>`;
+      return;
+    }
+  } else {
+    const pos = loadPOs();
+    record = pos.find(p => p.id === poId);
+    recordId = poId;
+    if (!record) {
+      root.innerHTML = `<div class="error-box">PO <strong>${h(poId)}</strong> not found in this browser's storage.<br><small>Open this page in the same Chrome/Edge window where the PO was created.</small></div>`;
+      return;
+    }
+    if (record.status !== 'approved') {
+      root.innerHTML = `<div class="error-box warn">PO <strong>${h(poId)}</strong> has not been approved yet.<br><small>Status: ${h(record.status)}</small></div>`;
+      return;
+    }
   }
-  if (po.status !== 'approved') {
-    root.innerHTML = `<div class="error-box warn">PO <strong>${h(poId)}</strong> has not been approved yet.<br><small>Status: ${h(po.status)}</small></div>`;
-    return;
-  }
 
-  document.getElementById('bar-label').textContent = `Contract — ${po.project.client_name || 'Client'} · ${po.id}`;
-  document.title = `NFR Contract — ${po.project.client_name || po.id}`;
+  const po = record;
 
-  // Pricing
+  document.getElementById('bar-label').textContent = `Contract — ${po.project.client_name || 'Client'} · ${recordId}`;
+  document.title = `NFR Contract — ${po.project.client_name || recordId}`;
+
+  // Pricing — use stored grand_total if available (agreements store it), otherwise calculate
   const MAT_MU = 0.24, SUB_MU = 0.30, EQ_MU = 0.15, LABOR_RATE = 85;
   const taxRate = parseFloat(po.project.tax_region) || 7.5;
 
@@ -177,9 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const subBilled   = totSub   * (1 + SUB_MU);
   const toolsBilled = totTools * (1 + EQ_MU);
   const taxAmt      = totMat   * (taxRate / 100);
-  const grand       = laborRev + matBilled + subBilled + toolsBilled + taxAmt;
+  // Use stored grand total from agreement if available (ensures contract matches what was signed)
+  const grand       = po.grand_total || (laborRev + matBilled + subBilled + toolsBilled + taxAmt);
 
-  const contractDate = fmtDate(po.approved_at || po.created_at);
+  const contractDate = fmtDate(po.jose_approved_at || po.signed_at || po.approved_at || po.created_at);
   const startDate    = fmtDate(po.project.start_date);
 
   const scopeItems = (po.scope_items||[]).filter(i => i.description || i.mat_cost > 0 || i.sub_cost > 0);

@@ -405,14 +405,14 @@
 <!-- RIGHT: Line Items + Results -->
 <div>
 
-  <!-- PO INBOX PANEL -->
+  <!-- AGREEMENT INBOX PANEL -->
   <div class="po-inbox-panel no-print" id="po-inbox-panel">
     <div class="po-inbox-header">
       <div class="po-inbox-title">
-        📋 Purchase Orders Awaiting Review
+        📋 Agreements Awaiting Your Review
         <span class="po-count-badge" id="po-count-badge">0</span>
       </div>
-      <span style="font-size:8pt;color:var(--muted);">Click a row to review, price, and approve</span>
+      <span style="font-size:8pt;color:var(--muted);">Review scope · approve · send to client</span>
     </div>
     <div id="po-inbox-list"></div>
   </div>
@@ -931,23 +931,31 @@ function copyTotal(){
   navigator.clipboard.writeText(v).then(()=>alert('Copied: '+v));
 }
 
-// ── PO INBOX SYSTEM ───────────────────────────────────────────────────────────
+// ── AGREEMENT INBOX SYSTEM ────────────────────────────────────────────────────
 function loadPOs(){ try{ return JSON.parse(localStorage.getItem('nfr_pos')||'[]'); }catch(e){ return []; } }
 function savePOs(pos){ localStorage.setItem('nfr_pos', JSON.stringify(pos)); }
+function loadAgreements(){ try{ return JSON.parse(localStorage.getItem('nfr_agreements')||'[]'); }catch(e){ return []; } }
+function saveAgreements(agrs){ localStorage.setItem('nfr_agreements', JSON.stringify(agrs)); }
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function refreshPOInbox(){
-  const pending = loadPOs().filter(p => p.status === 'pending_review');
+  // Show both pending agreements AND legacy pending_review POs
+  const pendingAgr = loadAgreements().filter(a => a.status === 'pending_jose');
+  const pendingPOs = loadPOs().filter(p => p.status === 'pending_review');
+  const pending = [
+    ...pendingAgr.map(a => ({...a, _type:'agr'})),
+    ...pendingPOs.map(p => ({...p, _type:'po'}))
+  ];
   const panel   = document.getElementById('po-inbox-panel');
   const badge   = document.getElementById('po-badge-pill');
   const countEl = document.getElementById('po-count-badge');
 
   if(badge){
     if(pending.length > 0){
-      badge.textContent = '📋 ' + pending.length + ' pending PO' + (pending.length>1?'s':'');
+      badge.textContent = '📋 ' + pending.length + ' awaiting review';
       badge.className = 'po-badge-pill no-print';
     } else {
-      badge.textContent = '📋 PO Inbox';
+      badge.textContent = '📋 Inbox';
       badge.className = 'po-badge-pill empty no-print';
     }
   }
@@ -960,17 +968,18 @@ function refreshPOInbox(){
   const list = document.getElementById('po-inbox-list');
   if(!list) return;
   list.innerHTML = '';
-  pending.forEach(po => {
-    const dt = new Date(po.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  pending.forEach(item => {
+    const dt = new Date(item.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const label = item._type === 'agr' ? 'AGR' : 'PO';
     const row = document.createElement('div');
     row.className = 'po-inbox-row';
     row.innerHTML = `
-      <div class="pi-col"><div class="pi-label">PO #</div><div class="pi-val">${escH(po.id)}</div></div>
-      <div class="pi-col"><div class="pi-label">Client</div><div class="pi-val">${escH(po.project.client_name||'—')}</div></div>
-      <div class="pi-col"><div class="pi-label">Type</div><div class="pi-val">${escH(po.project.project_type||'—')}</div></div>
-      <div class="pi-col"><div class="pi-label">Created by</div><div class="pi-val">${escH(po.created_by||'—')}</div></div>
+      <div class="pi-col"><div class="pi-label">${label} #</div><div class="pi-val">${escH(item.id)}</div></div>
+      <div class="pi-col"><div class="pi-label">Client</div><div class="pi-val">${escH(item.project.client_name||'—')}</div></div>
+      <div class="pi-col"><div class="pi-label">Type</div><div class="pi-val">${escH(item.project.project_type||'—')}</div></div>
+      <div class="pi-col"><div class="pi-label">Created by</div><div class="pi-val">${escH(item.created_by||'—')}</div></div>
       <div class="pi-col"><div class="pi-label">Date</div><div class="pi-val">${dt}</div></div>
-      <button class="review-btn" onclick="openPOReview('${escH(po.id)}')">Review →</button>`;
+      <button class="review-btn" onclick="openPOReview('${escH(item.id)}','${item._type}')">Review →</button>`;
     list.appendChild(row);
   });
 }
@@ -980,12 +989,19 @@ function scrollToPOInbox(){
   if(panel && panel.style.display !== 'none') panel.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function openPOReview(poId){
-  const po = loadPOs().find(p => p.id === poId);
+function openPOReview(recordId, recordType){
+  recordType = recordType || 'po';
+  let po;
+  if(recordType === 'agr'){
+    po = loadAgreements().find(a => a.id === recordId);
+  } else {
+    po = loadPOs().find(p => p.id === recordId);
+  }
   if(!po) return;
 
   const modal = document.getElementById('po-review-modal');
-  modal.dataset.poId = poId;
+  modal.dataset.poId = recordId;
+  modal.dataset.poType = recordType;
 
   // Use current calculator rates
   const laborRate = pf('default-bill-rate') || 85;
@@ -1093,46 +1109,70 @@ function closePOReview(){
 }
 
 function approvePO(){
-  const modal = document.getElementById('po-review-modal');
-  const poId  = modal?.dataset.poId;
-  if(!poId) return;
+  const modal      = document.getElementById('po-review-modal');
+  const recordId   = modal?.dataset.poId;
+  const recordType = modal?.dataset.poType || 'po';
+  if(!recordId) return;
 
   const notes = document.getElementById('pm-jose-notes')?.value || '';
-  const pos   = loadPOs();
-  const idx   = pos.findIndex(p => p.id === poId);
-  if(idx < 0) return;
 
-  pos[idx].status      = 'approved';
-  pos[idx].jose_notes  = notes;
-  pos[idx].approved_at = new Date().toISOString();
-  pos[idx].approved_by = 'Jose Martinez';
-  savePOs(pos);
-
-  closePOReview();
-  refreshPOInbox();
-  window.open('contract.html?po=' + encodeURIComponent(poId), '_blank');
+  if(recordType === 'agr'){
+    const agrs = loadAgreements();
+    const idx  = agrs.findIndex(a => a.id === recordId);
+    if(idx < 0) return;
+    agrs[idx].status           = 'jose_approved';
+    agrs[idx].jose_notes       = notes;
+    agrs[idx].jose_approved_at = new Date().toISOString();
+    saveAgreements(agrs);
+    closePOReview();
+    refreshPOInbox();
+    window.open('contract.html?agr=' + encodeURIComponent(recordId), '_blank');
+    alert('✅ Agreement approved — contract opened in new tab.\n\nNext step: Send the contract to the client. When they sign and pay the deposit, mark it in Agreement Portal and a PO will be auto-generated.');
+  } else {
+    const pos = loadPOs();
+    const idx = pos.findIndex(p => p.id === recordId);
+    if(idx < 0) return;
+    pos[idx].status      = 'approved';
+    pos[idx].jose_notes  = notes;
+    pos[idx].approved_at = new Date().toISOString();
+    pos[idx].approved_by = 'Jose Martinez';
+    savePOs(pos);
+    closePOReview();
+    refreshPOInbox();
+    window.open('contract.html?po=' + encodeURIComponent(recordId), '_blank');
+  }
 }
 
 function requestPOChanges(){
-  const modal = document.getElementById('po-review-modal');
-  const poId  = modal?.dataset.poId;
-  if(!poId) return;
+  const modal      = document.getElementById('po-review-modal');
+  const recordId   = modal?.dataset.poId;
+  const recordType = modal?.dataset.poType || 'po';
+  if(!recordId) return;
 
   const notes = (document.getElementById('pm-jose-notes')?.value || '').trim();
   if(!notes){ alert('Please add notes explaining what changes are needed.'); document.getElementById('pm-jose-notes')?.focus(); return; }
 
-  const pos = loadPOs();
-  const idx = pos.findIndex(p => p.id === poId);
-  if(idx < 0) return;
-
-  pos[idx].status          = 'rejected';
-  pos[idx].jose_notes      = notes;
-  pos[idx].rejected_reason = notes;
-  savePOs(pos);
+  if(recordType === 'agr'){
+    const agrs = loadAgreements();
+    const idx  = agrs.findIndex(a => a.id === recordId);
+    if(idx < 0) return;
+    agrs[idx].status          = 'draft'; // send back to draft for Maria to revise
+    agrs[idx].jose_notes      = notes;
+    agrs[idx].rejected_reason = notes;
+    saveAgreements(agrs);
+  } else {
+    const pos = loadPOs();
+    const idx = pos.findIndex(p => p.id === recordId);
+    if(idx < 0) return;
+    pos[idx].status          = 'rejected';
+    pos[idx].jose_notes      = notes;
+    pos[idx].rejected_reason = notes;
+    savePOs(pos);
+  }
 
   closePOReview();
   refreshPOInbox();
-  alert('Changes requested for ' + poId + '. Maria will see the updated status in her portal.');
+  alert('Changes requested for ' + recordId + '. Maria will see the feedback in her portal.');
 }
 
 // Close modal on backdrop click
