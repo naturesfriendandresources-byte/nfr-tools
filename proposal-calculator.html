@@ -247,6 +247,8 @@
     padding:10px 22px;font-family:'Lato',sans-serif;font-size:10.5pt;font-weight:700;cursor:pointer;}
   .btn-changes:hover{background:#fdf0ee;}
 </style>
+<script src="js/auth.js"></script>
+<script>NFRAuth.requireAuth('calculator');</script>
 </head>
 <body>
 <div class="app">
@@ -1183,6 +1185,119 @@ document.getElementById('po-review-modal')?.addEventListener('click', function(e
 // Init + auto-refresh every 30s
 document.addEventListener('DOMContentLoaded', refreshPOInbox);
 setInterval(refreshPOInbox, 30000);
+
+// ── Staff Password Management (Jose only) ─────────────────────
+const STAFF_USERS = [
+  { key:'jose',  label:'Jose Martinez',  portal:'proposal-calculator.html' },
+  { key:'maria', label:'Maria',          portal:'agreement-portal.html' },
+  { key:'jen',   label:'Jen',            portal:'jen-portal.html' },
+];
+
+function getPwStore()   { return JSON.parse(localStorage.getItem('nfr_staff_passwords') || '{}'); }
+function savePwStore(o) { localStorage.setItem('nfr_staff_passwords', JSON.stringify(o)); }
+function encode(pw)     { return btoa(unescape(encodeURIComponent(pw))); }
+
+function renderPasswordPanel() {
+  const store = getPwStore();
+  const rows = STAFF_USERS.map(u => {
+    const set = !!store[u.key];
+    return `<tr>
+      <td style="padding:8px 10px;font-weight:700">${u.label}</td>
+      <td style="padding:8px 10px">
+        <span style="padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;
+          background:${set ? '#D1FAE5' : '#FEF3C7'};color:${set ? '#065F46' : '#92400E'}">
+          ${set ? '✓ Password Set' : '⚠ Not Set'}
+        </span>
+      </td>
+      <td style="padding:8px 10px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="password" id="pw-reset-${u.key}" placeholder="New password"
+            style="border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:11px;width:140px;outline:none">
+          <button onclick="resetStaffPassword('${u.key}')"
+            style="padding:5px 12px;font-size:11px;font-weight:700;background:var(--primary);color:#fff;border:none;border-radius:4px;cursor:pointer">
+            Set
+          </button>
+          ${set ? `<button onclick="clearStaffPassword('${u.key}')"
+            style="padding:5px 10px;font-size:11px;font-weight:700;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;border-radius:4px;cursor:pointer">
+            Clear
+          </button>` : ''}
+        </div>
+        <div id="pw-msg-${u.key}" style="font-size:11px;margin-top:4px;color:var(--success);display:none"></div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('pw-table-body').innerHTML = rows;
+}
+
+function resetStaffPassword(userKey) {
+  const inp = document.getElementById('pw-reset-' + userKey);
+  const pw  = inp.value.trim();
+  if (!pw) { showPwMsg(userKey, 'Enter a new password first.', '#DC2626'); return; }
+  if (pw.length < 4) { showPwMsg(userKey, 'Minimum 4 characters.', '#DC2626'); return; }
+  const store = getPwStore();
+  store[userKey] = encode(pw);
+  savePwStore(store);
+  inp.value = '';
+  showPwMsg(userKey, '✓ Password updated.', 'var(--success)');
+  setTimeout(renderPasswordPanel, 1200);
+}
+
+function clearStaffPassword(userKey) {
+  if (!confirm('Clear password for ' + userKey + '? They will need to create a new one on next login.')) return;
+  const store = getPwStore();
+  delete store[userKey];
+  savePwStore(store);
+  renderPasswordPanel();
+}
+
+function showPwMsg(userKey, msg, color) {
+  const el = document.getElementById('pw-msg-' + userKey);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const pwPanel = document.getElementById('pw-panel-body');
+  if (pwPanel) renderPasswordPanel();
+});
 </script>
+
+<!-- ── Staff Password Panel (visible at bottom of Jose's page) ── -->
+<div style="max-width:1340px;margin:0 auto 30px;padding:0 18px">
+  <div class="panel" style="border-top:3px solid var(--primary)">
+    <div class="p-title" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer"
+         onclick="const b=document.getElementById('pw-panel-body');b.style.display=b.style.display==='none'?'block':'none'">
+      🔑 Staff Portal Access &amp; Passwords
+      <span style="font-size:11px;color:var(--muted);font-family:'Lato',sans-serif;font-weight:400">Manage who can access each portal</span>
+    </div>
+    <div id="pw-panel-body" style="display:none">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+        Set or reset passwords for each staff member. They will be prompted to create their own password on first login.
+        Passwords are stored locally in this browser — share new passwords directly with each person.
+      </p>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:var(--light)">
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--primary)">Staff Member</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--primary)">Status</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--primary)">Reset Password</th>
+            </tr>
+          </thead>
+          <tbody id="pw-table-body"></tbody>
+        </table>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px;font-style:italic">
+        Note: Passwords are stored in this browser's localStorage. Each computer/browser has its own copy.
+        For a shared office computer, one setup covers the whole team.
+      </p>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

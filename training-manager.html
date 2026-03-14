@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NFR Training — Manager Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/training-styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-brand">
+      <span>NFR</span>
+      <span class="brand-dot">·</span>
+      <span>Team Training</span>
+    </div>
+    <div class="header-right">
+      <span class="header-name">Manager Dashboard</span>
+      <button class="btn-logout" id="btn-logout">Sign Out</button>
+    </div>
+  </header>
+
+  <main class="manager-main">
+    <div class="week-nav">
+      <span class="week-nav-label" id="week-label">Loading…</span>
+      <button class="btn-nav" id="btn-prev-week">&larr; Prev Week</button>
+      <button class="btn-nav btn-this-week" id="btn-this-week">This Week</button>
+      <button class="btn-nav" id="btn-next-week">Next Week &rarr;</button>
+    </div>
+
+    <div class="employee-grid" id="employee-grid"></div>
+
+    <h2 class="detail-section-heading">Week Detail</h2>
+    <div class="detail-table-wrap">
+      <div id="detail-table-container"></div>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>NFRAuth.requireAuth('training-manager');</script>
+  <script src="js/training-tracker.js"></script>
+  <script src="js/training-content.js"></script>
+  <script src="js/training-manager.js"></script>
+</body>
+</html>

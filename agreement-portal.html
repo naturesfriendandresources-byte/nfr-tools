@@ -159,7 +159,8 @@
   /* CUSTOM TAX INPUT */
   #custom-tax-wrap{display:none;}
 </style>
-<script>(function(){var s=JSON.parse(sessionStorage.getItem('nfr_session')||'null');if(!s||!['jose','maria'].includes(s.user)){window.location.replace('index.html');}})();</script>
+<script src="js/auth.js"></script>
+<script>NFRAuth.requireAuth('agreements');</script>
 </head>
 <body>
 <div class="app">

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NFR Training — My Training</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/training-styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-brand">
+      <span>NFR</span>
+      <span class="brand-dot">·</span>
+      <span>Team Training</span>
+    </div>
+    <div class="header-right">
+      <span class="header-name" id="emp-name"></span>
+      <span class="header-timer" id="session-timer">00:00</span>
+      <button class="btn-logout" id="btn-logout">Sign Out</button>
+    </div>
+  </header>
+
+  <main class="employee-main">
+    <div id="main-content">
+      <div class="rest-card">
+        <div class="rest-icon">⏳</div>
+        <h2>Loading your training…</h2>
+      </div>
+    </div>
+
+    <div class="week-pills-wrap" id="week-pills-container"></div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>NFRAuth.requireAuth('training-employee');</script>
+  <script src="js/training-tracker.js"></script>
+  <script src="js/training-content.js"></script>
+  <script src="js/training-employee.js"></script>
+</body>
+</html>
