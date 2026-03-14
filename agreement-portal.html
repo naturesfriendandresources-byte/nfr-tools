@@ -116,6 +116,10 @@
   .agent-item:last-child{border-bottom:none;}
   .agent-icon{font-size:13pt;line-height:1;flex-shrink:0;margin-top:-1px;}
   .agent-passed{font-size:9pt;color:var(--success);font-style:italic;padding:8px 0;}
+  .agent-suggest-title{font-size:8pt;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.3px;margin-top:12px;padding-top:10px;border-top:2px dashed var(--border);}
+  .agent-suggest-item{display:flex;align-items:flex-start;gap:8px;padding:5px 8px;margin-top:5px;background:var(--light);border:1px dashed var(--border);border-radius:4px;cursor:pointer;font-size:8.5pt;transition:background .15s;}
+  .agent-suggest-item:hover{background:#d8eee8;border-color:var(--primary);}
+  .agent-suggest-icon{font-size:14pt;font-weight:700;color:var(--primary);line-height:1;flex-shrink:0;}
 
   /* BUTTONS */
   .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center;}
@@ -155,6 +159,7 @@
   /* CUSTOM TAX INPUT */
   #custom-tax-wrap{display:none;}
 </style>
+<script>(function(){var s=JSON.parse(sessionStorage.getItem('nfr_session')||'null');if(!s||!['jose','maria'].includes(s.user)){window.location.replace('index.html');}})();</script>
 </head>
 <body>
 <div class="app">
@@ -1020,6 +1025,47 @@ function runAgentCheck() {
     }
   });
 
+  // ── Trade-pair checks (v2) ────────────────────────────────────
+  const allCats     = items.map(i => i.category);
+  const suggestions = [];   // { category, text } — clickable add-row suggestions
+
+  // 8. Shower/Tub present + Waterproofing absent → ERROR
+  if (allCats.some(c => c === 'Shower / Tub') && !allCats.some(c => c === 'Waterproofing')) {
+    issues.push({ type: 'error', msg: 'Shower / Tub scoped but Waterproofing is missing — water damage liability exposure' });
+    suggestions.push({ category: 'Waterproofing', text: 'Apply waterproof membrane to all shower walls and floor before tile installation.' });
+  }
+
+  // 9. Structural present + Permits absent → ERROR
+  if (allCats.some(c => c === 'Structural') && !allCats.some(c => c === 'Permits & Inspections')) {
+    issues.push({ type: 'error', msg: 'Structural work scoped but no Permits & Inspections line item — permit required by law' });
+    suggestions.push({ category: 'Permits & Inspections', text: 'Pull all required permits. Schedule and pass rough-in and final inspections.' });
+  }
+
+  // 10. Rough Electrical present + Finish Electrical absent → WARNING
+  if (allCats.some(c => c === 'Rough Electrical') && !allCats.some(c => c === 'Finish Electrical')) {
+    issues.push({ type: 'warn', msg: 'Rough Electrical is scoped but Finish Electrical is missing — confirm this is handled separately' });
+    suggestions.push({ category: 'Finish Electrical', text: 'Install all outlet covers, switch plates, light fixtures, under-cabinet lighting final trim, and GFCI outlets as required.' });
+  }
+
+  // 11. Rough Plumbing present + Fixtures & Plumbing Finish absent → WARNING
+  if (allCats.some(c => c === 'Rough Plumbing') && !allCats.some(c => c === 'Fixtures & Plumbing Finish')) {
+    issues.push({ type: 'warn', msg: 'Rough Plumbing is scoped but Fixtures & Plumbing Finish is missing — confirm fixtures are handled separately' });
+    suggestions.push({ category: 'Fixtures & Plumbing Finish', text: 'Install all fixtures: sink, faucet(s), shower valve trim, showerhead, toilet. Connect all supply and drain lines.' });
+  }
+
+  // 12. Cabinets present + Countertops absent → WARNING
+  if (allCats.some(c => c === 'Cabinets') && !allCats.some(c => c === 'Countertops')) {
+    issues.push({ type: 'warn', msg: 'Cabinets scoped but Countertops are missing — confirm client is supplying their own countertops' });
+    suggestions.push({ category: 'Countertops', text: 'Supply and install countertops per client selection. Template after cabinet install. Lead time 10–14 business days.' });
+  }
+
+  // 13. Demo present + Dumpster/Haul Away absent → WARNING
+  if (allCats.some(c => c === 'Demo & Site Prep') &&
+      !items.some(i => i.category === 'Demo & Site Prep' && (i.sub_category||'').toLowerCase().includes('dumpster'))) {
+    issues.push({ type: 'warn', msg: 'Demo scope present but no Dumpster / Haul Away line item — confirm debris removal is accounted for' });
+    suggestions.push({ category: 'Demo & Site Prep', text: 'Dumpster / haul away — provide roll-off dumpster and remove all demolition debris within 48 hours.' });
+  }
+
   // Check: no items at all
   if (items.length === 0) {
     issues.push({ type: 'error', msg: 'No scope items added yet' });
@@ -1049,6 +1095,16 @@ function runAgentCheck() {
     if (passed) {
       html = `<div class="agent-passed">No errors found (${warns.length} warning${warns.length !== 1 ? 's' : ''} — review before submitting).</div>` + html;
     }
+    // Suggested missing trades
+    if (suggestions.length > 0) {
+      html += `<div class="agent-suggest-title">Suggested Missing Trades — click to add row</div>`;
+      suggestions.forEach(s => {
+        html += `<div class="agent-suggest-item" onclick="addSuggestedRow(${JSON.stringify(s.category)}, ${JSON.stringify(s.text)})">
+          <span class="agent-suggest-icon">+</span>
+          <span><strong>${h(s.category)}</strong> — ${h(s.text)}</span>
+        </div>`;
+      });
+    }
     container.innerHTML = html;
   }
 
@@ -1070,6 +1126,40 @@ function runAgentCheck() {
   showToast(passed
     ? 'Check passed — ready to submit'
     : `Check complete: ${errors.length} error(s), ${warns.length} warning(s)`);
+}
+
+// ── Add Suggested Row ─────────────────────────────────────────────────────────
+function addSuggestedRow(category, description) {
+  if (isLocked) return;
+  addScopeRow({ category, description, sub_category: '', spec: '', dimensions: '', men: 1, est_hrs: 0, mat_cost: 0, sub_cost: 0, tools_cost: 0, sub_contractor: '', checklist: [], checklist_done: [] });
+  showToast('Row added: ' + category);
+  // Scroll to scope table
+  document.getElementById('sc-body')?.closest('table')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Share with Client ─────────────────────────────────────────────────────────
+function shareWithClient(agrId) {
+  const agr = findAgreement(agrId);
+  if (!agr) return;
+  const snap = {
+    id:              agr.id,
+    status:          agr.status,
+    project:         agr.project,
+    scope_items:     agr.scope_items,
+    grand_total:     agr.grand_total || calcGrandTotal(agr),
+    jose_approved_at: agr.jose_approved_at || '',
+    created_at:      agr.created_at
+  };
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(snap))));
+  const base    = window.location.href.replace(/[^/]*$/, '');
+  const url     = `${base}contract.html?shared=${encodeURIComponent(agr.id)}&snap=${encodeURIComponent(encoded)}`;
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url)
+      .then(() => showToast('Client link copied to clipboard!'))
+      .catch(() => prompt('Copy this link and send to the client:', url));
+  } else {
+    prompt('Copy this link and send to the client:', url);
+  }
 }
 
 // ── Checklist Modal ───────────────────────────────────────────────────────────
@@ -1159,6 +1249,7 @@ function renderHistory() {
     } else if (agr.status === 'jose_approved') {
       actionHtml = `
         <span style="font-size:8pt;color:var(--success);font-weight:700;margin-right:8px;">Approved</span>
+        <button class="btn btn-p btn-sm" onclick="shareWithClient('${h(agr.id)}')" title="Generate shareable link to send to client" style="margin-right:4px;">Share with Client</button>
         <button class="btn btn-g btn-sm" onclick="markSigned('${h(agr.id)}')">Mark Signed</button>`;
     } else if (agr.status === 'sent_to_client') {
       actionHtml = `<button class="btn btn-g btn-sm" onclick="markSigned('${h(agr.id)}')">Mark Signed</button>`;
@@ -1167,7 +1258,7 @@ function renderHistory() {
     } else if (agr.status === 'deposit_paid') {
       const poId = agr.po_id;
       if (poId) {
-        actionHtml = `<button class="btn btn-p btn-sm" onclick="window.open('po-portal.html','_blank')">View PO (${h(poId)})</button>`;
+        actionHtml = `<button class="btn btn-p btn-sm" onclick="window.open('jen-portal.html','_blank')">View in Ops (${h(poId)})</button>`;
       } else {
         actionHtml = `<span style="font-size:8pt;color:var(--success);font-weight:700;">Deposit Paid</span>`;
       }

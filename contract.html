@@ -6,7 +6,7 @@
 <title>NFR Contract</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@300;400;700&display=swap');
-  :root { --primary:#3A6B5F; --accent:#E07B54; --border:#A8CEBF; --text:#2D2D2D; }
+  :root { --primary:#3A6B5F; --accent:#E07B54; --border:#A8CEBF; --text:#2D2D2D; --warn:#92400E; --success:#065F46; }
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Lato',sans-serif;font-size:10pt;color:var(--text);background:#f0f4f3;}
 
@@ -95,12 +95,56 @@
     text-align:center;font-size:11pt;max-width:600px;margin:60px auto;line-height:1.7;}
   .error-box.warn{background:#856404;}
 
+  /* TERMS */
+  .terms-block{display:flex;gap:12px;margin-bottom:14px;font-size:9pt;line-height:1.7;color:#444;}
+  .terms-num{min-width:22px;font-weight:700;color:var(--primary);padding-top:1px;}
+  .terms-highlight{background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:12px 14px;margin-bottom:14px;}
+  .terms-highlight .terms-num{color:#92400E;}
+  .terms-highlight{color:#78350F;}
+
+  /* E-SIGN */
+  .esign-box{background:#F0F7FF;border:2px solid #3B82F6;border-radius:10px;padding:28px 32px;margin:30px 0 20px;}
+  .esign-title{font-family:'Playfair Display',serif;font-size:14pt;color:#1E3A5F;margin-bottom:10px;}
+  .esign-intro{font-size:9pt;color:#374151;line-height:1.7;margin-bottom:20px;}
+  .esign-checks{display:flex;flex-direction:column;gap:14px;margin-bottom:22px;}
+  .esign-check-row{display:flex;gap:12px;align-items:flex-start;font-size:9pt;color:#1F2937;line-height:1.6;cursor:pointer;}
+  .esign-check-row input[type=checkbox]{min-width:18px;height:18px;margin-top:2px;accent-color:#1D4ED8;cursor:pointer;}
+  .esign-name-row{display:grid;grid-template-columns:1fr 180px;gap:16px;margin-bottom:16px;}
+  .esign-field label{display:block;font-size:8pt;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px;}
+  .esign-field input{width:100%;border:1.5px solid #93C5FD;border-radius:6px;padding:10px 12px;font-family:'Lato',sans-serif;font-size:11pt;outline:none;transition:border-color .15s;}
+  .esign-field input:focus{border-color:#2563EB;}
+  .esign-btn{width:100%;padding:14px;background:#1D4ED8;color:#fff;border:none;border-radius:7px;font-family:'Lato',sans-serif;font-size:13pt;font-weight:700;cursor:pointer;transition:opacity .15s;margin-bottom:12px;}
+  .esign-btn:disabled{background:#93C5FD;cursor:not-allowed;}
+  .esign-btn:not(:disabled):hover{opacity:.88;}
+  .esign-legal-note{font-size:8pt;color:#6B7280;line-height:1.6;font-style:italic;text-align:center;}
+  .esign-confirmed{background:#D1FAE5;border:2px solid #6EE7B7;border-radius:10px;padding:20px 24px;margin:20px 0;display:flex;align-items:center;gap:16px;}
+  .esign-confirmed-icon{font-size:28px;}
+  .esign-confirmed-text{font-size:10pt;color:#065F46;line-height:1.6;}
+
+  /* SCOPE GROUPS */
+  .scope-group{margin-bottom:18px;}
+  .scope-group-title{font-family:'Playfair Display',serif;font-size:10.5pt;color:var(--primary);
+    border-left:3px solid var(--border);padding:5px 0 5px 12px;margin-bottom:8px;font-weight:600;}
+  .scope-group ol{margin:0 0 0 22px;padding:0;}
+  .scope-group ol li{margin-bottom:7px;line-height:1.7;font-size:9.5pt;}
+  .scope-clause{font-size:8pt;color:#6B7280;line-height:1.65;font-style:italic;
+    background:#F9FAFB;border-left:2px solid #D1D5DB;padding:7px 10px;margin-top:6px;border-radius:0 4px 4px 0;}
+
+  /* NETLIFY FORM THANK-YOU */
+  .esign-thankyou{background:#D1FAE5;border:2px solid #6EE7B7;border-radius:10px;
+    padding:28px 32px;margin:30px 0 20px;text-align:center;}
+  .esign-thankyou h2{font-family:'Playfair Display',serif;color:#065F46;font-size:16pt;margin-bottom:10px;}
+  .esign-thankyou p{font-size:10pt;color:#065F46;line-height:1.7;}
+
   @media print {
     body{background:#fff;}
     .print-bar{display:none!important;}
+    .esign-box{display:none!important;}
     .contract{margin:0;padding:36px 44px;box-shadow:none;max-width:100%;}
     .info-cell:nth-child(odd){background:#f8f8f8 !important;-webkit-print-color-adjust:exact;}
     .pay-card{border-color:#ccc;}
+    .terms-highlight{background:#FFFDE7 !important;-webkit-print-color-adjust:exact;}
+    .esign-confirmed{background:#F0FFF4 !important;-webkit-print-color-adjust:exact;}
   }
 </style>
 </head>
@@ -113,6 +157,19 @@
   </div>
   <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
 </div>
+
+<!-- Netlify form (hidden — submitted via fetch in shared/remote mode) -->
+<form id="netlify-sig-form" name="nfr-esign" method="POST" data-netlify="true" netlify-honeypot="bot-field" style="display:none">
+  <input name="form-name" value="nfr-esign">
+  <input name="bot-field">
+  <input name="agreement_id"        id="nf-agr-id">
+  <input name="client_name_signed"  id="nf-client-name">
+  <input name="signed_at"           id="nf-signed-at">
+  <input name="contract_total"      id="nf-total">
+  <input name="project_type"        id="nf-proj-type">
+  <input name="client_address"      id="nf-address">
+  <input name="user_agent"          id="nf-ua">
+</form>
 
 <div id="contract-root"></div>
 
@@ -136,11 +193,50 @@ function scopeLine(item) {
   return line;
 }
 
+// ── Per-trade contract clauses ────────────────────────────────────────────────
+const TRADE_CLAUSES = {
+  'Demo & Site Prep': 'All demolition debris removed within 48 hours. Work areas inaccessible during active demo. Pre-existing conditions discovered after demo require a written change order before remediation.',
+  'Structural': 'All structural modifications performed per applicable code. Permits and engineering review may be required and are billed at cost. Additional structural deficiencies found during work require a change order.',
+  'Rough Electrical': 'All rough electrical work performed by or under supervision of a licensed electrician. Permits pulled where required. Electrical panel must be unobstructed on start date.',
+  'Finish Electrical': 'All outlet covers, switch plates, light fixtures, and GFCI outlets installed per approved scope. Client approves any fixture substitutions in writing before installation.',
+  'Rough Plumbing': 'All rough plumbing performed by a licensed plumber. Water shutoff confirmed before work begins. Pressure-tested before walls are closed. Gas line work requires licensed plumber to pull permit.',
+  'Fixtures & Plumbing Finish': 'Client confirms all fixture selections in writing before ordering. Owner-supplied fixtures installed at owner\'s risk. All connections leak-tested 24 hours after installation.',
+  'Waterproofing': 'Waterproofing applied per manufacturer spec. NFR warranty covers installation workmanship only — does not cover external water intrusion, drainage issues, or foundation failure. Flood test performed before tile installation.',
+  'Drywall': 'Drywall installed, taped, and finished to specified level. Level 5 finish requires primer coat before application.',
+  'Tile Work': 'Client approves tile layout, grout color, and pattern in writing before installation begins. Changes after installation commences are a change order. Grout sealed 72 hours after installation.',
+  'Flooring': 'Client approves flooring material, color, and run direction before installation. Flooring acclimated per manufacturer requirements. Existing subfloor defects discovered during installation require a change order.',
+  'Cabinets': 'Client reviews and approves cabinet layout drawing before order is placed. Cancellation or changes after order placement are subject to restocking fees passed to client.',
+  'Countertops': 'Template/measurement appointment required after cabinet installation. Countertop lead time is 10–14 business days after template. Client approves stone slab selection before fabrication.',
+  'Shower / Tub': 'Shower floor sloped minimum ¼" per foot toward drain. Shower pan flood-tested for 24 hours before tile installation.',
+  'Appliances': 'Client confirms appliance dimensions match rough-in locations before installation. NFR not responsible for manufacturer defects. Anti-tip brackets installed on all freestanding ranges.',
+  'Paint & Finish': 'Client approves color samples on actual wall surface in writing before full application. Touch-up coat included. Full repaint after application begins due to color change is a change order.',
+  'Trim & Millwork': 'All inside corners coped, not mitered. Nail holes and caulk filled before paint.',
+  'Bathroom Accessories': 'Accessories installed on blocking or rated anchors. Standard towel bar height 48" AFF unless otherwise specified in writing.',
+  'Sub-Contractors': 'All sub-contractors carry their own general liability insurance and applicable state licensing. Sub-contractor scope buyouts signed before work commences.',
+  'Permits & Inspections': 'All permits obtained before permitted work begins. Permit fees not listed above billed at cost. Work shall not be covered until all required rough-in inspections are passed.',
+  'Acoustic / Drop Ceiling Tile': 'All existing tile removed and disposed. New grid installed level and square. Accessibility panels provided at all mechanical/junction box locations per code.'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Support both ?agr=AGR-2026-1001 (new flow) and ?po=PO-2026-1001 (legacy)
+  // Support ?shared= (remote client link), ?agr= (internal), or ?po= (legacy)
+  const sharedId = qp('shared');
+  const snapParam = qp('snap');
   const agrId = qp('agr');
   const poId  = qp('po');
   const root  = document.getElementById('contract-root');
+
+  // ── Shared / remote mode ──
+  if (sharedId && snapParam) {
+    let record = null;
+    try {
+      record = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(snapParam)))));
+    } catch(e) {
+      root.innerHTML = '<div class="error-box">Invalid or corrupted contract link. Please ask Jose to re-send the link.</div>';
+      return;
+    }
+    renderContract(record, sharedId, 'agr', true, root);
+    return;
+  }
 
   if (!agrId && !poId) {
     root.innerHTML = '<div class="error-box">No ID in URL.<br><small>Use contract.html?agr=AGR-2026-1001 or contract.html?po=PO-2026-1001</small></div>';
@@ -176,12 +272,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  const po = record;
+  renderContract(record, recordId, agrId ? 'agr' : 'po', false, root);
+
+});
+
+// ── Shared-mode flag (set by renderContract) ──────────────────────────────────
+let _isSharedMode = false;
+
+// ── Main contract renderer ────────────────────────────────────────────────────
+function renderContract(po, recordId, recordType, isShared, root) {
+  _isSharedMode = isShared;
 
   document.getElementById('bar-label').textContent = `Contract — ${po.project.client_name || 'Client'} · ${recordId}`;
   document.title = `NFR Contract — ${po.project.client_name || recordId}`;
+  if (isShared) {
+    const backBtn = document.querySelector('.btn-back');
+    if (backBtn) backBtn.style.display = 'none';
+  }
 
-  // Pricing — use stored grand_total if available (agreements store it), otherwise calculate
   const MAT_MU = 0.24, SUB_MU = 0.30, EQ_MU = 0.15, LABOR_RATE = 85;
   const taxRate = parseFloat(po.project.tax_region) || 7.5;
 
@@ -198,20 +306,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const subBilled   = totSub   * (1 + SUB_MU);
   const toolsBilled = totTools * (1 + EQ_MU);
   const taxAmt      = totMat   * (taxRate / 100);
-  // Use stored grand total from agreement if available (ensures contract matches what was signed)
   const grand       = po.grand_total || (laborRev + matBilled + subBilled + toolsBilled + taxAmt);
 
   const contractDate = fmtDate(po.jose_approved_at || po.signed_at || po.approved_at || po.created_at);
   const startDate    = fmtDate(po.project.start_date);
 
+  // Group scope items by category and append per-trade protection clauses
   const scopeItems = (po.scope_items||[]).filter(i => i.description || i.mat_cost > 0 || i.sub_cost > 0);
-  const scopeHtml = scopeItems.length > 0
-    ? `<ol class="scope-list">${scopeItems.map(item => `
-        <li>
-          <span class="scope-cat">${h(item.category)}</span>
-          ${h(scopeLine(item))}
-        </li>`).join('')}</ol>`
-    : '<p style="color:#aaa;font-style:italic;">No scope items defined.</p>';
+  let scopeHtml;
+  if (scopeItems.length > 0) {
+    const grouped = {};
+    const catOrder = [];
+    scopeItems.forEach(item => {
+      const cat = item.category || 'Other';
+      if (!grouped[cat]) { grouped[cat] = []; catOrder.push(cat); }
+      grouped[cat].push(item);
+    });
+    scopeHtml = catOrder.map(cat => {
+      const clause = TRADE_CLAUSES[cat] || '';
+      return `<div class="scope-group">
+        <div class="scope-group-title">${h(cat)}</div>
+        <ol>${grouped[cat].map(item => `<li>${h(scopeLine(item))}</li>`).join('')}</ol>
+        ${clause ? `<div class="scope-clause">${h(clause)}</div>` : ''}
+      </div>`;
+    }).join('');
+  } else {
+    scopeHtml = '<p style="color:#aaa;font-style:italic;">No scope items defined.</p>';
+  }
 
   const fullAddr = [po.project.client_addr, po.project.client_city, 'OH', po.project.client_zip]
     .filter(Boolean).join(', ') || '—';
@@ -280,22 +401,118 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <div class="section">
       <div class="section-title">Terms &amp; Conditions</div>
-      <ul class="terms-list">
-        <li>Work will not begin until the deposit has been received in full.</li>
-        <li>Work will pause if the progress payment is not received on schedule.</li>
-        <li>Accepted payment methods: Personal Check, Zelle, or ACH Bank Transfer.</li>
-        <li>Any changes to the scope of work must be agreed to in writing as a signed change order before work proceeds. Additional charges may apply.</li>
-        <li>Natures Friend &amp; Resources is not responsible for damage caused by pre-existing conditions unless disclosed in writing prior to commencement.</li>
-        <li>All work will be performed in a workmanlike manner consistent with industry standards.</li>
-        <li>Client is responsible for clearing personal belongings and furniture from work areas prior to the start date.</li>
-        <li>This contract is valid for 30 days from the contract date above.</li>
-      </ul>
+
+      <div class="terms-block">
+        <div class="terms-num">1.</div>
+        <div>
+          <strong>Work Commencement &amp; Deposit.</strong> Natures Friend &amp; Resources ("Contractor") shall not begin work, order materials, or reserve labor until the 40% deposit has been received in full. The deposit reserves the project start date. If the deposit is not received within 30 days of the contract date, this contract expires and Contractor is released from all obligations hereunder.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">2.</div>
+        <div>
+          <strong>Payment Obligations — Binding Agreement to Pay.</strong> Client is legally obligated to make all payments in accordance with the payment schedule on the preceding page: (a) <strong>40% Deposit</strong> — due upon signing, prior to commencement; (b) <strong>40% Progress Payment</strong> — due upon materials being ordered or work commencing on site, whichever occurs first; (c) <strong>20% Final Payment</strong> — due in full on the day of project completion and walkthrough. Payments are accepted by Personal Check, Zelle, or ACH Bank Transfer only. Time is of the essence with respect to all payment obligations under this Contract.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">3.</div>
+        <div>
+          <strong>Late Payments &amp; Interest.</strong> Any payment not received within five (5) calendar days of its due date shall be considered past due. Past-due balances shall accrue interest at the rate of <strong>1.5% per month (18% annually)</strong> from the due date until paid in full. Contractor reserves the right to apply any partial payment first to accrued interest, then to the outstanding principal.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">4.</div>
+        <div>
+          <strong>Right to Suspend or Terminate Work.</strong> If Client fails to make any payment within five (5) calendar days of the due date, Contractor may, at its sole discretion: (a) suspend all work and remove materials and equipment from the job site; or (b) terminate this Contract upon written notice to Client. In the event of work suspension or termination due to Client's non-payment, Client shall be liable for all work performed to date, materials purchased, labor mobilized, and any reasonable costs of demobilization and remobilization. Resumption of work after a payment-related suspension shall require full payment of all overdue amounts plus a remobilization fee.
+        </div>
+      </div>
+
+      <div class="terms-block terms-highlight">
+        <div class="terms-num">5.</div>
+        <div>
+          <strong>Ohio Mechanic's Lien Notice (Required by Ohio Law).</strong> Any contractor, subcontractor, laborer, or material supplier who helps improve your property, but is not paid for his work, may record what is called a mechanic's lien on your property. A mechanic's lien is a claim against your property. If the lien is not resolved, the claimant may be able to force the sale of your property to collect the amount owed. Natures Friend &amp; Resources reserves all rights under Ohio Revised Code Chapter 1311 to file a mechanic's lien against the property described in this Contract for any unpaid amounts.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">6.</div>
+        <div>
+          <strong>Change Orders.</strong> The scope of work set forth in this Contract is final. Any additions, deletions, or modifications to the scope of work must be agreed upon in writing by both parties in a signed change order before any additional work is performed. Verbal agreements to perform additional work are not binding on Contractor. Each approved change order shall constitute an amendment to this Contract and may affect the total contract price and project timeline.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">7.</div>
+        <div>
+          <strong>Client Responsibilities.</strong> Client agrees to: (a) provide Contractor and its subcontractors reasonable access to the property during normal working hours (7:00 AM – 5:00 PM, Monday–Friday); (b) remove or protect personal belongings, furniture, and valuables from work areas prior to the project start date; (c) disclose in writing any known or suspected hazardous materials (including but not limited to asbestos, lead paint, mold) prior to commencement. Failure to disclose known hazardous conditions may result in additional costs and delays, all of which shall be the responsibility of Client.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">8.</div>
+        <div>
+          <strong>Pre-Existing Conditions.</strong> Contractor is not responsible for damage arising from pre-existing conditions at the property that were not disclosed in writing prior to commencement, including but not limited to: defective framing, subfloor damage, concealed plumbing or electrical deficiencies, water intrusion, or structural defects discovered during the course of work. Discovery of pre-existing conditions may require a written change order for remediation and may affect the project timeline and total price.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">9.</div>
+        <div>
+          <strong>Delays &amp; Force Majeure.</strong> Contractor shall not be liable for delays caused by circumstances beyond its reasonable control, including but not limited to: adverse weather conditions, supply chain disruptions, material shortages, subcontractor delays, utility company schedules, permit processing times, acts of God, or government orders. Contractor will notify Client of any material delays and provide a revised estimated timeline as practicable.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">10.</div>
+        <div>
+          <strong>Workmanship Warranty.</strong> Contractor warrants all labor performed under this Contract against defects in workmanship for a period of <strong>one (1) year</strong> from the date of project completion. This warranty does not cover damage caused by Client misuse, modification, neglect, or normal wear and tear. Materials are covered solely by the manufacturer's warranty, which Contractor will assist Client in filing where applicable. This warranty is void if Client fails to make all payments due under this Contract.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">11.</div>
+        <div>
+          <strong>Permits &amp; Code Compliance.</strong> Where required by applicable law, Contractor shall obtain necessary building permits and inspections. Permit fees, where not expressly included in the contract price above, shall be an additional cost billed to Client at cost. Client hereby authorizes Contractor to act as contractor of record for permitting purposes for this project.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">12.</div>
+        <div>
+          <strong>Limitation of Liability.</strong> Contractor's maximum liability to Client under this Contract, for any reason, shall not exceed the total amount paid by Client to Contractor under this Contract. In no event shall Contractor be liable for indirect, incidental, consequential, or punitive damages of any kind.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">13.</div>
+        <div>
+          <strong>Dispute Resolution &amp; Attorney Fees.</strong> In the event of any dispute arising from or relating to this Contract, the parties agree to first attempt resolution through good-faith negotiation. If the dispute is not resolved within thirty (30) days, either party may pursue available legal remedies in the courts of Franklin County, Ohio. The prevailing party in any legal action shall be entitled to recover reasonable attorney fees and court costs from the non-prevailing party.
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">14.</div>
+        <div>
+          <strong>Three-Day Right to Cancel (Ohio Home Solicitation Sales Act).</strong> If this contract was solicited at the Client's residence or a location other than Contractor's permanent place of business, Client has the right to cancel this transaction within three (3) business days of the date of signing. Cancellation must be made in writing and delivered to Natures Friend &amp; Resources. If Client cancels within this period, any deposit paid shall be refunded within 10 business days. <em>This right does not apply if Client initiated contact and the work is urgently required to protect health or safety.</em>
+        </div>
+      </div>
+
+      <div class="terms-block">
+        <div class="terms-num">15.</div>
+        <div>
+          <strong>Entire Agreement.</strong> This Contract, including any signed change orders, constitutes the entire agreement between the parties with respect to the project described herein and supersedes all prior discussions, representations, or agreements, whether oral or written. This Contract may not be modified except by a written instrument signed by both parties. This Contract shall be governed by the laws of the State of Ohio.
+        </div>
+      </div>
     </div>
 
-    <div class="section">
+    <!-- ── Physical Signature Block (for print) ── -->
+    <div class="section" id="print-sig-block">
       <div class="section-title">Signatures</div>
       <p style="font-size:9pt;color:#777;margin-bottom:20px;line-height:1.65;">
-        By signing below, both parties agree to the scope of work, total price, payment schedule, and all terms outlined in this contract.
+        By signing below, both parties agree to the complete scope of work, total contract price, payment schedule, and all fifteen (15) terms and conditions set forth above. Client acknowledges having read and understood this entire contract.
       </p>
       <div class="sig-grid">
         <div class="sig-block">
@@ -313,6 +530,9 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     </div>
 
+    <!-- ── Electronic Acknowledgment (screen only) ── -->
+    <div id="esign-section"></div>
+
     <div class="nfr-stamp">
       <div class="stamp-name">Natures Friend &amp; Resources</div>
       <div class="stamp-sub">Columbus, Ohio &nbsp;·&nbsp; Licensed &amp; Insured &nbsp;·&nbsp; Home Improvement Contractor</div>
@@ -320,7 +540,177 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
   </div>`;
-});
+
+  // ── Render e-sign section based on agreement status ──────────
+  const esignEl = document.getElementById('esign-section');
+  const alreadySigned = ['signed','deposit_paid'].includes(po.status) && po.client_signed_name;
+
+  if (alreadySigned) {
+    esignEl.innerHTML = `
+      <div class="esign-confirmed">
+        <div class="esign-confirmed-icon">✅</div>
+        <div class="esign-confirmed-text">
+          <strong>Electronically Acknowledged</strong><br>
+          Signed by <strong>${h(po.client_signed_name)}</strong> on ${fmtDate(po.client_signed_at)}<br>
+          <small style="color:#065F46;opacity:.75">Agreement ID: ${h(po.id)}</small>
+        </div>
+      </div>`;
+  } else if (isShared || ['jose_approved','sent_to_client','signed'].includes(po.status)) {
+    esignEl.innerHTML = `
+      <div class="esign-box">
+        <div class="esign-title">Electronic Acknowledgment &amp; Signature</div>
+        <p class="esign-intro">
+          Please read this entire contract carefully before signing. By completing the acknowledgment below, you confirm that you have read and understood all terms, and you agree to be legally bound by this contract including the payment obligations described above.
+        </p>
+        <div class="esign-checks">
+          <label class="esign-check-row">
+            <input type="checkbox" id="chk-read" onchange="checkEsignReady()">
+            <span>I have read and understand the complete scope of work, total contract price, payment schedule (40% deposit / 40% progress / 20% final), and all fifteen (15) terms and conditions in this contract.</span>
+          </label>
+          <label class="esign-check-row">
+            <input type="checkbox" id="chk-pay" onchange="checkEsignReady()">
+            <span>I agree to make all payments according to the schedule above and understand that failure to pay on time may result in work suspension, interest charges of 1.5%/month, a mechanic's lien on my property, and legal action to recover all amounts owed including attorney fees.</span>
+          </label>
+          <label class="esign-check-row">
+            <input type="checkbox" id="chk-cancel" onchange="checkEsignReady()">
+            <span>I have been informed of my three-day right to cancel (if applicable under Ohio law) and I am signing this contract voluntarily.</span>
+          </label>
+        </div>
+        <div class="esign-name-row">
+          <div class="esign-field">
+            <label>Your Full Legal Name <span style="color:#DC2626">*</span></label>
+            <input type="text" id="esign-name" placeholder="Type your full name to serve as your signature" oninput="checkEsignReady()">
+          </div>
+          <div class="esign-field" style="max-width:180px">
+            <label>Today's Date <span style="color:#DC2626">*</span></label>
+            <input type="date" id="esign-date" value="${new Date().toISOString().substring(0,10)}" oninput="checkEsignReady()">
+          </div>
+        </div>
+        <div id="esign-msg" style="font-size:12px;color:#DC2626;margin-bottom:10px;display:none"></div>
+        <button class="esign-btn" id="esign-btn" onclick="submitEsign('${h(recordId)}','${recordType}')" disabled>
+          Sign &amp; Accept Contract
+        </button>
+        <p class="esign-legal-note">
+          Your typed name above constitutes your electronic signature on this contract. This electronic acknowledgment is binding and has the same legal effect as a handwritten signature under the Electronic Signatures in Global and National Commerce Act (E-SIGN) and applicable Ohio law.
+        </p>
+      </div>`;
+    // Pre-fill Netlify hidden form with metadata
+    if (isShared) {
+      const fullAddr2 = [po.project.client_addr, po.project.client_city, 'OH', po.project.client_zip].filter(Boolean).join(', ') || '—';
+      const el = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
+      el('nf-agr-id',    recordId);
+      el('nf-total',     fmt(grand));
+      el('nf-proj-type', po.project.project_type || '');
+      el('nf-address',   fullAddr2);
+      el('nf-ua',        navigator.userAgent);
+    }
+  }
+} // end renderContract
+
+function checkEsignReady() {
+  const chkRead   = document.getElementById('chk-read');
+  const chkPay    = document.getElementById('chk-pay');
+  const chkCancel = document.getElementById('chk-cancel');
+  const name      = (document.getElementById('esign-name')?.value || '').trim();
+  const date      = document.getElementById('esign-date')?.value;
+  const btn       = document.getElementById('esign-btn');
+  if (!btn) return;
+  const ready = chkRead?.checked && chkPay?.checked && chkCancel?.checked && name.length >= 3 && date;
+  btn.disabled = !ready;
+}
+
+function submitEsign(recordId, recordType) {
+  const name = (document.getElementById('esign-name')?.value || '').trim();
+  const date = document.getElementById('esign-date')?.value;
+  const msg  = document.getElementById('esign-msg');
+
+  if (!name || name.length < 3) {
+    msg.textContent = 'Please type your full legal name.';
+    msg.style.display = 'block'; return;
+  }
+  if (!date) {
+    msg.textContent = 'Please enter today\'s date.';
+    msg.style.display = 'block'; return;
+  }
+
+  const signedAt = new Date().toISOString();
+  const esignEl  = document.getElementById('esign-section');
+
+  // ── Shared / remote mode → submit to Netlify ──────────────────
+  if (_isSharedMode) {
+    const btn = document.getElementById('esign-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+
+    document.getElementById('nf-client-name').value = name;
+    document.getElementById('nf-signed-at').value   = signedAt;
+    document.getElementById('nf-ua').value          = navigator.userAgent;
+
+    const formData = new FormData(document.getElementById('netlify-sig-form'));
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(formData).toString()
+    }).then(() => {
+      if (esignEl) {
+        esignEl.innerHTML = `
+          <div class="esign-thankyou">
+            <h2>Contract Signed</h2>
+            <p>
+              Thank you, <strong>${name.replace(/</g,'&lt;')}</strong>. Your contract has been submitted.<br>
+              <strong>Jose Martinez</strong> will contact you within 24 hours to confirm receipt and next steps.<br>
+              <small style="opacity:.7;">Agreement: ${recordId} &nbsp;·&nbsp; ${new Date(signedAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</small>
+            </p>
+          </div>`;
+        document.querySelector('.esign-thankyou')?.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    }).catch(() => {
+      if (msg) {
+        msg.textContent = 'Submission failed. Please email naturesfriendandresources@gmail.com directly.';
+        msg.style.display = 'block';
+      }
+      if (btn) { btn.disabled = false; btn.textContent = 'Sign & Accept Contract'; }
+    });
+    return;
+  }
+
+  // ── Local mode → write to localStorage ────────────────────────
+  if (recordType === 'agr') {
+    const agrs = JSON.parse(localStorage.getItem('nfr_agreements') || '[]');
+    const idx = agrs.findIndex(a => a.id === recordId);
+    if (idx >= 0) {
+      agrs[idx].status             = 'signed';
+      agrs[idx].client_signed_name = name;
+      agrs[idx].client_signed_at   = signedAt;
+      agrs[idx].client_signed_date = date;
+      agrs[idx].signed_at          = signedAt;
+      localStorage.setItem('nfr_agreements', JSON.stringify(agrs));
+    }
+  } else {
+    const pos = JSON.parse(localStorage.getItem('nfr_pos') || '[]');
+    const idx = pos.findIndex(p => p.id === recordId);
+    if (idx >= 0) {
+      pos[idx].status             = 'signed';
+      pos[idx].client_signed_name = name;
+      pos[idx].client_signed_at   = signedAt;
+      pos[idx].client_signed_date = date;
+      pos[idx].signed_at          = signedAt;
+      localStorage.setItem('nfr_pos', JSON.stringify(pos));
+    }
+  }
+
+  if (esignEl) {
+    esignEl.innerHTML = `
+      <div class="esign-confirmed">
+        <div class="esign-confirmed-icon">✅</div>
+        <div class="esign-confirmed-text">
+          <strong>Contract Electronically Signed</strong><br>
+          Signed by <strong>${name.replace(/</g,'&lt;')}</strong> on ${new Date(signedAt).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} at ${new Date(signedAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}<br>
+          <small style="color:#065F46;opacity:.75">Agreement ID: ${recordId} &nbsp;·&nbsp; This electronic signature is legally binding.</small>
+        </div>
+      </div>`;
+  }
+  document.querySelector('.esign-confirmed')?.scrollIntoView({behavior:'smooth', block:'center'});
+}
 </script>
 </body>
 </html>
